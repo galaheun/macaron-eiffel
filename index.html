@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 에펠탑 쌓기">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130742">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130830">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -26,21 +26,31 @@
 <style>
 /* Layout: one full-bleed canvas (a Paris square that climbs into the night sky) under a floating pâtisserie-label HUD; dialogs are gilded box labels */
 :root{
-  --ink:#3b2733;          /* ganache plum */
-  --ink-soft:#6e5763;
-  --cream:#fff8f1;        /* vanilla shell */
-  --glass:rgba(255,248,241,.86);
-  --rose:#ec7d9d;         /* framboise */
-  --rose-deep:#d65f86;
-  --gold:#c39a45;         /* gilded tongs */
-  --gold-ink:#94722b;
-  --gold-wash:rgba(195,154,69,.1);
+  /* the brand's graphic-charter colours */
+  --c-red:#de281b;        /* PANTONE 485 C */
+  --c-orange:#ff9c1b;     /* PANTONE 1375 C */
+  --c-yellow:#f1e400;     /* PANTONE 3945 C */
+  --c-blue:#c0ced7;       /* PANTONE 5435 C */
+  --c-cream:#ece0ae;      /* PANTONE 616 C */
+  --c-pink:#f0e1de;       /* PANTONE 503 C */
+  --c-choc:#6c362a;       /* PANTONE 175 C */
+  --c-black:#453035;      /* PANTONE Black 5 C */
+  --c-tan:#be9373;        /* PANTONE 4655 C */
+  --ink:#453035;
+  --ink-soft:#8a7273;
+  --cream:#fffdfb;
+  --glass:rgba(255,253,250,.9);
+  --rose:#de281b;
+  --rose-deep:#b81f14;
+  --gold:#be9373;
+  --gold-ink:#6c362a;
+  --gold-wash:rgba(236,224,174,.5);
   --night:#14122f;
-  --ivory:#fbf8f3;        /* intro: boutique paper */
-  --lux-ink:#171315;
-  --lux-mute:#7b7073;
-  --hair:rgba(23,19,21,.14);
-  --hair-strong:rgba(23,19,21,.38);
+  --ivory:#fdfbf8;        /* intro and cards: the charter's white page */
+  --lux-ink:#453035;
+  --lux-mute:#8a7273;
+  --hair:rgba(190,147,115,.42);
+  --hair-strong:rgba(179,147,122,.95);
   --f-lux:"Hahmlet","Gowun Batang","AppleMyungjo",serif;
   --f-display:"Gowun Batang","Nanum Myeongjo","AppleMyungjo",serif;
   --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
@@ -58,7 +68,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--f-body)
 body[data-mode="title"] .ui{opacity:0}
 .hud{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .hud-left{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}
-.alt-card{background:var(--glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:18px;padding:9px 15px 9px;box-shadow:0 8px 22px -10px rgba(40,18,40,.35),inset 0 0 0 1px rgba(195,154,69,.4)}
+.alt-card{background:var(--glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:18px;padding:9px 15px 9px;box-shadow:0 8px 22px -10px rgba(40,18,40,.35),inset 0 0 0 1px rgba(190,147,115,.4)}
 .alt{display:flex;align-items:baseline;gap:3px;font-family:var(--f-num);font-weight:600;font-size:clamp(32px,8.6vw,44px);line-height:1;font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.01em}
 .alt .u{font-size:.5em;font-style:italic;font-weight:500}
 .alt .goal{font-size:.38em;font-weight:400;color:var(--ink-soft);margin-left:6px}
@@ -67,7 +77,7 @@ body[data-mode="title"] .ui{opacity:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 11px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:12.5px;box-shadow:0 6px 16px -10px rgba(40,18,40,.4)}
 .chip b{font-family:var(--f-num);font-style:italic;font-size:16px;line-height:1}
-.chip.combo{background:linear-gradient(180deg,#fff4cf,#f3d68a);color:#5f430d;box-shadow:0 6px 16px -8px rgba(160,110,20,.55),inset 0 0 0 1px rgba(160,120,40,.35)}
+.chip.combo{background:linear-gradient(180deg,#f6eecb,var(--c-cream));color:var(--c-choc);box-shadow:0 6px 16px -8px rgba(108,54,42,.45),inset 0 0 0 1px rgba(190,147,115,.6)}
 .chip.wind svg{width:16px;height:12px;transition:transform .3s}
 .chip.wind[data-dir="l"] svg{transform:scaleX(-1)}
 .hud-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
@@ -85,7 +95,7 @@ body[data-mode="title"] .ui{opacity:0}
 
 /* height rail */
 .rail{position:fixed;right:max(14px,calc(env(safe-area-inset-right,0px) + 6px));top:35%;bottom:19%;width:5px;border-radius:5px;background:rgba(255,255,255,.42);box-shadow:0 0 0 1px rgba(59,39,51,.08)}
-.rail-fill{position:absolute;left:0;right:0;bottom:0;height:0;border-radius:5px;background:linear-gradient(to top,var(--rose),#f3d68a)}
+.rail-fill{position:absolute;left:0;right:0;bottom:0;height:0;border-radius:5px;background:linear-gradient(to top,var(--c-red),var(--c-orange) 55%,var(--c-yellow))}
 .rail-top{position:absolute;left:50%;top:-36px;width:22px;height:31px;margin-left:-11px;fill:var(--gold);filter:drop-shadow(0 1px 1px rgba(40,20,30,.25))}
 .rail-dot{position:absolute;left:50%;width:9px;height:9px;margin:0 0 -4.5px -4.5px;border-radius:50%;background:#fffaf4;box-shadow:inset 0 0 0 1.5px var(--gold)}
 .rail-dot.on{background:var(--gold)}
@@ -95,7 +105,7 @@ body[data-mode="title"] .ui{opacity:0}
 @media (min-width:760px){.rail-label{display:block}}
 
 /* milestone toast */
-.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 21%);transform:translate(-50%,-14px) scale(.96);opacity:0;transition:opacity .35s ease,transform .5s cubic-bezier(.2,1.4,.4,1);display:flex;flex-direction:column;align-items:center;gap:3px;max-width:calc(100% - 32px);padding:12px 24px 13px;text-align:center;border-radius:18px;background:var(--cream);box-shadow:0 20px 40px -18px rgba(30,10,30,.55),inset 0 0 0 1px rgba(195,154,69,.6),inset 0 0 0 5px var(--cream),inset 0 0 0 6px rgba(195,154,69,.32)}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 21%);transform:translate(-50%,-14px) scale(.96);opacity:0;transition:opacity .35s ease,transform .5s cubic-bezier(.2,1.4,.4,1);display:flex;flex-direction:column;align-items:center;gap:3px;max-width:calc(100% - 32px);padding:12px 24px 13px;text-align:center;border-radius:18px;background:var(--cream);box-shadow:0 20px 40px -18px rgba(30,10,30,.55),inset 0 0 0 1px rgba(190,147,115,.6),inset 0 0 0 5px var(--cream),inset 0 0 0 6px rgba(190,147,115,.32)}
 .toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
 .toast .t-eye{font-family:var(--f-num);font-style:italic;font-size:14px;color:var(--gold-ink)}
 .toast strong{font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1.2;text-wrap:balance}
@@ -104,8 +114,8 @@ body[data-mode="title"] .ui{opacity:0}
 /* dialogs */
 .overlay{position:fixed;inset:0;z-index:5;display:flex;overflow-y:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(env(safe-area-inset-top,0px) + 20px) calc(env(safe-area-inset-bottom,0px) + 20px);background:radial-gradient(ellipse at 50% 45%,rgba(26,14,34,.12),rgba(26,14,34,.42));animation:fade .4s ease}
 /* result cards: the intro's boutique paper laid over the dimmed scene */
-.overlay.sheet{background:rgba(20,16,22,.42);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
-#pWin.sheet{background:rgba(20,16,22,.26);-webkit-backdrop-filter:none;backdrop-filter:none}
+.overlay.sheet{background:rgba(69,48,53,.46);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+#pWin.sheet{background:rgba(69,48,53,.28);-webkit-backdrop-filter:none;backdrop-filter:none}
 .lux-card{width:100%;max-width:380px;margin:auto;padding:34px 26px 26px;border-radius:2px;background:var(--ivory);color:var(--lux-ink);text-align:center;box-shadow:0 44px 90px -34px rgba(0,0,0,.6);animation:rise .6s cubic-bezier(.2,.8,.25,1)}
 .lux-mark{margin:0;padding-left:.4em;font-family:var(--f-num);font-weight:500;font-size:11px;letter-spacing:.4em;text-transform:uppercase}
 .lux-big{display:flex;justify-content:center;align-items:baseline;gap:6px;margin:22px 0 2px;font-family:var(--f-num);font-weight:400;font-size:clamp(58px,17vw,76px);line-height:1;letter-spacing:-.01em;font-variant-numeric:lining-nums}
@@ -161,8 +171,8 @@ kbd:first-child{margin-left:0}
 .facts dd small{margin-left:2px;font-size:.5em;font-style:italic}
 .facts dt{font-size:11px;letter-spacing:.08em;color:var(--lux-mute)}
 .btn-lux{pointer-events:auto;width:100%;max-width:320px;min-height:54px;padding-left:.34em;border:0;border-radius:0;background:var(--lux-ink);color:var(--ivory);font-family:var(--f-lux);font-weight:500;font-size:15px;letter-spacing:.34em;cursor:pointer;transition:background .25s ease,letter-spacing .4s ease}
-.btn-lux:hover{background:#000;letter-spacing:.42em}
-.btn-lux:active{background:#000}
+.btn-lux:hover{background:var(--c-choc);letter-spacing:.42em}
+.btn-lux:active{background:var(--c-choc)}
 .btn-lux:focus-visible{outline:1px solid var(--lux-ink);outline-offset:4px}
 .intro-hint{margin:9px 0 0;font-size:12px;color:var(--lux-mute)}
 .howto{width:100%;margin-top:clamp(8px,1.6vh,18px);text-align:left}
@@ -185,7 +195,7 @@ kbd:first-child{margin-left:0}
 .rank-btn{flex:none;width:84px;height:46px;padding-left:.2em;border:0;border-radius:0;background:var(--lux-ink);color:var(--ivory);font:500 14px var(--f-lux);letter-spacing:.2em;cursor:pointer}
 .rank-btn:disabled{opacity:.5;cursor:default}
 .rank-msg{min-height:1.4em;margin:10px auto 0;max-width:32ch;font-size:13px;line-height:1.55;color:var(--lux-ink);text-wrap:balance}
-.rank-msg.err{color:#b0304f}
+.rank-msg.err{color:#c8241a}
 .rank-msg:empty{display:none}
 .rank-list{list-style:none;margin:10px 0 0;padding:0;text-align:left;border-top:1px solid var(--hair)}
 .rank-list li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:baseline;gap:8px;padding:9px 4px;border-bottom:1px solid var(--hair);font-size:14px}
@@ -196,10 +206,10 @@ kbd:first-child{margin-left:0}
 .rank-list li.empty{color:var(--lux-mute)}
 /* prize draw entry: a strip on the result cards opens a short form (name, phone, consent) */
 .rank-input,.rf-field input{-webkit-user-select:text;user-select:text}
-.raffle-box{margin:4px 0 16px;padding:16px 14px 14px;background:var(--gold-wash);text-align:center}
+.raffle-box{margin:4px 0 16px;padding:16px 14px 14px;background:var(--c-pink);text-align:center}
 .raffle-box .rank-head{margin-bottom:6px;color:var(--gold-ink)}
 .raffle-line{margin:0 auto;max-width:30ch;font-size:13.5px;line-height:1.6;white-space:pre-line;text-wrap:balance}
-.raffle-open{width:100%;min-height:46px;margin-top:12px;padding-left:.16em;border:1px solid var(--lux-ink);border-radius:0;background:var(--ivory);color:var(--lux-ink);font:500 14px var(--f-lux);letter-spacing:.16em;cursor:pointer;transition:background .25s ease,color .25s ease}
+.raffle-open{width:100%;min-height:46px;margin-top:12px;padding-left:.16em;border:1px solid var(--lux-ink);border-radius:0;background:#fff;color:var(--lux-ink);font:500 14px var(--f-lux);letter-spacing:.16em;cursor:pointer;transition:background .25s ease,color .25s ease}
 .raffle-open:hover{background:var(--lux-ink);color:var(--ivory)}
 .raffle-open:focus-visible{outline:1px solid var(--lux-ink);outline-offset:3px}
 .raffle-box .lux-link{margin-top:8px}
@@ -214,7 +224,7 @@ kbd:first-child{margin-left:0}
 .rf-field span{display:block;margin:0 0 6px;font-size:12px;letter-spacing:.1em;color:var(--lux-mute)}
 .rf-field input{width:100%;height:50px;padding:0 14px;border:1px solid var(--hair-strong);border-radius:0;background:#fff;color:var(--lux-ink);font:16px var(--f-body)}
 .rf-field input:focus{outline:1px solid var(--lux-ink);outline-offset:1px}
-.rf-terms{margin:18px 0 4px;padding:14px 14px 12px;background:rgba(23,19,21,.045);font-size:12px;line-height:1.65;color:#4a4144}
+.rf-terms{margin:18px 0 4px;padding:14px 14px 12px;background:rgba(192,206,215,.34);font-size:12px;line-height:1.65;color:#5a4549}
 .rf-terms h3{margin:0 0 8px;font:500 12.5px var(--f-lux);letter-spacing:.04em;color:var(--lux-ink)}
 .rf-terms dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:0}
 .rf-terms dt{white-space:nowrap;color:var(--lux-mute)}
@@ -222,12 +232,12 @@ kbd:first-child{margin-left:0}
 .rf-terms p{margin:8px 0 0}
 .rf-check{display:flex;align-items:flex-start;gap:10px;margin:12px 0 0;font-size:13.5px;line-height:1.5;cursor:pointer}
 .rf-check input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--lux-ink)}
-.rf-check b{margin-right:6px;font-weight:400;color:#b0304f}
+.rf-check b{margin-right:6px;font-weight:400;color:#c8241a}
 .raffle-card .rank-msg{max-width:none;text-align:center}
 .raffle-card .lux-actions{margin-top:18px}
 .raffle-done{text-align:center}
 .raffle-done ul{list-style:none;margin:18px 0 22px;padding:0;border-top:1px solid var(--hair);text-align:left}
-.raffle-done li{padding:11px 2px;border-bottom:1px solid var(--hair);font-size:13px;line-height:1.6;color:#4a4144}
+.raffle-done li{padding:11px 2px;border-bottom:1px solid var(--hair);font-size:13px;line-height:1.6;color:#5a4549}
 .raffle-done .lux-link{display:flex;margin:12px auto 0}
 /* opening splash: the event title card shown first, then it fades into the intro. Only in builds where publish_web.py fills the slot (brand-config.json "splash") */
 .splash{position:fixed;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden;padding:max(30px,env(safe-area-inset-top,0px)) 26px max(30px,env(safe-area-inset-bottom,0px));background:radial-gradient(70% 34% at 50% 0%,rgba(255,196,128,.2),rgba(255,196,128,0)),radial-gradient(120% 75% at 50% 42%,#7f2a33 0%,#6b1f2a 38%,#4b141c 76%,#3b0d15 100%);color:#f3e2bb;text-align:center;cursor:pointer;transition:opacity .7s ease}
@@ -264,7 +274,7 @@ kbd:first-child{margin-left:0}
 .story-sec:last-of-type{border-bottom:1px solid var(--hair)}
 .story-sec .lux-mark{padding-left:0;margin-bottom:8px;font-size:10px;color:var(--lux-mute)}
 .story-sec h3{margin:0 0 6px;font-family:var(--f-lux);font-weight:500;font-size:16px;letter-spacing:.02em}
-.story-sec p{margin:0;font-size:13.5px;line-height:1.75;color:#4a4144;text-wrap:pretty}
+.story-sec p{margin:0;font-size:13.5px;line-height:1.75;color:#5a4549;text-wrap:pretty}
 .story-close{margin:22px 0 18px;text-align:center;font-family:var(--f-lux);font-weight:300;font-size:17px;line-height:1.6;text-wrap:balance}
 .story-card .lux-link{display:flex;margin:12px auto 0}
 @keyframes settle{from{opacity:0;transform:translateY(-26px)}}
@@ -320,7 +330,7 @@ kbd:first-child{margin-left:0}
   <div class="toast" id="toast" role="status" aria-live="polite"><span class="t-eye" id="tEye"></span><strong id="tName"></strong><span class="t-sub" id="tSub"></span></div>
 </div>
 
-<section class="splash" id="pSplash" aria-label="PIERRE HERMÉ PARIS, PARK HYATT BUSAN. CHRISTMAS WINTER LOUNGE" data-ms="3400" data-after="#fbf8f3">
+<section class="splash" id="pSplash" aria-label="PIERRE HERMÉ PARIS, PARK HYATT BUSAN. CHRISTMAS WINTER LOUNGE" data-ms="3400" data-after="#fdfbf8">
   <div class="sp-snow" aria-hidden="true"></div>
   <div class="sp-frame" aria-hidden="true"></div>
   <div class="sp-inner">
@@ -572,7 +582,14 @@ const FLAVORS = [
   { fr: 'fruit de la passion', s: '#f4dc94', d: '#dcbd68', f: '#f0ae3a' },
   { fr: 'caramel',             s: '#daa466', d: '#bb8346', f: '#a6662e' },
   { fr: 'vanille',             s: '#f3e9d3', d: '#d6c5a2', f: '#fffaf0', top: 'seeds', tc: '#2e2018' },
-].map(o => ({ ...o, S: C(o.s), D: C(o.d), F: C(o.f), TC: o.tc ? C(o.tc) : null, BL: o.bl ? C(o.bl) : null }));
+  // Christmas edition: one sweep of a wide brush over the top shell (tc where the brush lands, tc2 in its darker or lighter bristles)
+  { fr: 'jardin d\u2019alep',  s: '#a8755c', d: '#845342', f: '#3a2420', top: 'brush', tc: '#66752e', tc2: '#3d4a1c', ed: true },
+  { fr: '\u00e9clipse',        s: '#c99a89', d: '#a67666', f: '#3b2421', top: 'brush', tc: '#55302a', tc2: '#2e1915', ed: true },
+  { fr: 'antigone',            s: '#ebb5b0', d: '#d18e8a', f: '#f0e3d7', top: 'brush', tc: '#962c45', tc2: '#6a1c30', ed: true },
+  { fr: 'onde',                s: '#f2dc62', d: '#d8bc42', f: '#f6cd60', top: 'brush', tc: '#d93a25', tc2: '#ef8a2c', ed: true },
+].map(o => ({ ...o, S: C(o.s), D: C(o.d), F: C(o.f), TC: o.tc ? C(o.tc) : null, TC2: o.tc2 ? C(o.tc2) : null, BL: o.bl ? C(o.bl) : null }));
+// the edition flavours come up twice as often as the classics
+const PICKS = FLAVORS.flatMap((f, i) => f.ed ? [i, i] : [i]);
 
 /* ---------- state ---------- */
 let W = 0, H = 0, dpr = 1, ppm = 10, macPx = 80, macHpx = 36, focusY = 0, eiffelX = 0;
@@ -733,6 +750,20 @@ function toppings(g, w, h, fl, r){
   } else if (fl.top === 'seeds'){
     const s = Math.max(0.7, w * 0.008);
     for (let i = 0; i < w * 0.7; i++){ g.fillStyle = css(TC, 0.4 + r() * 0.35); g.fillRect((r() * 2 - 1) * hw * 0.92, -0.64 * h - r() * 0.35 * h, s, s); }
+  } else if (fl.top === 'brush'){
+    // one sweep of a wide flat brush across the dome: loaded where it lands, then dragging out into dry bristle streaks
+    const T2 = fl.TC2 || mixc(TC, BLACK, 0.3), dir = r() < 0.5 ? 1 : -1, x0 = dir * hw * (0.86 + r() * 0.08), depth = 0.3 * h;
+    const run = (d, reach, lw, col, a) => {
+      const x1 = x0 - dir * reach, gr = g.createLinearGradient(x0, 0, x1, 0);
+      gr.addColorStop(0, css(col, a)); gr.addColorStop(0.5, css(col, a * 0.78)); gr.addColorStop(1, css(col, 0));
+      g.strokeStyle = gr; g.lineWidth = lw; g.lineCap = 'round';
+      g.beginPath();
+      for (let k = 0; k <= 12; k++){ const x = x0 + (x1 - x0) * k / 12, y = surf(x) + d + Math.sin(k * 1.3 + d) * h * 0.004; if (k) g.lineTo(x, y); else g.moveTo(x, y); }
+      g.stroke();
+    };
+    for (let i = 0; i < 6; i++) run(depth * (0.08 + i * 0.15), hw * (1.25 + r() * 0.3), depth * 0.3, mixc(TC, T2, r() * 0.4), 0.42);
+    for (let i = 0; i < w * 0.5; i++) run(Math.pow(r(), 1.3) * depth * 1.08, hw * (0.75 + r() * 0.95), Math.max(0.5, w * (0.004 + r() * 0.011)), mixc(TC, T2, r() * r()), 0.35 + r() * 0.5);
+    for (let i = 0; i < w * 0.1; i++) run(r() * depth, hw * (0.6 + r() * 0.9), Math.max(0.5, w * 0.006), mixc(fl.S, WHITE, 0.25), 0.3);
   }
   g.restore();
 }
@@ -781,8 +812,8 @@ function drawHero(w){
   heroW = w;
   const sd = Math.min(window.devicePixelRatio || 1, 3);
   box.textContent = '';
-  // bottom to top: chocolat, chocolat passion, rose framboise, each nudged a little as if placed by hand
-  [[5, -2], [1, 3], [0, -1]].forEach(([fi, nudge], i) => {
+  // bottom to top, three of the Christmas edition: jardin d'alep, onde, antigone, each nudged a little as if placed by hand
+  [[11, -2], [14, 3], [13, -1]].forEach(([fi, nudge], i) => {
     const c = document.createElement('canvas');
     c.width = Math.ceil((w + pad * 2) * sd); c.height = Math.ceil((h + pad * 2) * sd);
     c.style.width = (w + pad * 2) + 'px'; c.style.height = (h + pad * 2) + 'px';
@@ -1128,7 +1159,7 @@ function buildSkyThings(){
 }
 
 /* ---------- sky colour by altitude ---------- */
-const SKY = [[0, '#a6dcff', '#eef8ff'], [90, '#86c3f3', '#fdf0e1'], [170, '#7191df', '#ffd5b4'], [240, '#5a57b6', '#ffaa91'], [300, '#2f2a73', '#d881a7'], [370, '#151339', '#4b3578'], [600, '#060716', '#1b1545']].map(([h, a, b]) => [h, C(a), C(b)]);
+const SKY = [[0, '#b2d1e6', '#f7f0ee'], [90, '#93bfe3', '#f9e9e2'], [170, '#7191df', '#ffd5b4'], [240, '#5a57b6', '#ffaa91'], [300, '#2f2a73', '#d881a7'], [370, '#151339', '#4b3578'], [600, '#060716', '#1b1545']].map(([h, a, b]) => [h, C(a), C(b)]);
 function skyAt(h){
   if (h <= SKY[0][0]) return [SKY[0][1], SKY[0][2]];
   for (let i = 1; i < SKY.length; i++) if (h <= SKY[i][0]){ const a = SKY[i - 1], b = SKY[i], t = (h - a[0]) / (b[0] - a[0]); return [mixc(a[1], b[1], t), mixc(a[2], b[2], t)]; }
@@ -1214,7 +1245,7 @@ function setMode(m){ S.mode = m; document.body.dataset.mode = m; }
 function sliderRange(){ return clamp(W / 2 / ppm - MAC_W * 0.75, MAC_W * 1.15, MAC_W * 2.6); }
 function speedFor(n){ return MAC_W * Math.min(S.endless ? 4.7 : 4.25, 1.9 + n * 0.023); }
 function windMax(h){ return h < 100 ? 0 : Math.min(S.endless ? 9 : 7, 1.2 + (h - 100) / 200 * 5.8); }
-function pickFlavor(){ let c; do { c = (Math.random() * FLAVORS.length) | 0; } while (c === S.lastFlavor); S.lastFlavor = c; return c; }
+function pickFlavor(){ let c; do { c = PICKS[(Math.random() * PICKS.length) | 0]; } while (c === S.lastFlavor); S.lastFlavor = c; return c; }
 function spawn(){
   const n = S.stack.length, dir = Math.random() < 0.5 ? 1 : -1;
   S.cur = { x: S.camX - dir * sliderRange(), dir, y: n * MAC_H + DROP_GAP, state: 'hold', c: pickFlavor(), born: S.t, vy: 0, vx: 0 };
@@ -1759,7 +1790,7 @@ function drawCurrent(dark){
     blitMac(cur.c, x, yb, pop, pop);
     drawTongs(x, yb, Math.min(1, pop), 0);
     ctx.font = 'italic 500 12px "Bodoni Moda", Didot, Georgia, serif';
-    ctx.fillStyle = dark > 0.5 ? 'rgba(255,244,230,.85)' : 'rgba(59,39,51,.7)';
+    ctx.fillStyle = dark > 0.5 ? 'rgba(255,244,230,.85)' : 'rgba(69,48,53,.78)';
     ctx.textAlign = 'left'; ctx.fillText(FLAVORS[cur.c].fr, x + 8, yb - macHpx * 2.6);
   } else blitMac(cur.c, x, yb);
 }
@@ -1778,14 +1809,14 @@ function drawTexts(dark){
     ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(sc, sc);
     if (t.kind === 'gold'){
       ctx.font = 'italic 700 26px "Bodoni Moda", Didot, Georgia, serif';
-      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(70,40,20,.35)'; ctx.strokeText(t.a, 0, 0);
-      const gr = ctx.createLinearGradient(0, -22, 0, 4); gr.addColorStop(0, '#fff3c4'); gr.addColorStop(1, '#d9a740');
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(69,48,53,.55)'; ctx.strokeText(t.a, 0, 0);
+      const gr = ctx.createLinearGradient(0, -22, 0, 4); gr.addColorStop(0, '#f8ec55'); gr.addColorStop(1, '#ff9c1b');
       ctx.fillStyle = gr; ctx.fillText(t.a, 0, 0);
-      if (t.b){ ctx.font = 'italic 600 18px "Bodoni Moda", Didot, Georgia, serif'; ctx.fillStyle = dark > 0.5 ? '#fff3dc' : '#7a5418'; ctx.fillText(t.b, 0, 20); }
+      if (t.b){ ctx.font = 'italic 600 18px "Bodoni Moda", Didot, Georgia, serif'; ctx.fillStyle = dark > 0.5 ? '#fff3dc' : '#6c362a'; ctx.fillText(t.b, 0, 20); }
     } else {
       ctx.font = '700 18px "Gowun Batang", serif';
       ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,248,241,.85)'; ctx.strokeText(t.a, 0, 0);
-      ctx.fillStyle = '#c94f78'; ctx.fillText(t.a, 0, 0);
+      ctx.fillStyle = '#de281b'; ctx.fillText(t.a, 0, 0);
     }
     ctx.restore();
   }
