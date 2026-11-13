@@ -9,18 +9,20 @@
 <meta property="og:title" content="마카롱 에펠탑 쌓기">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130734">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130742">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" as="image" href="brand-logo.png?v=a0b7ca9d">
 <link rel="preload" as="image" href="brand-logo-2.png?v=c58f2ffd">
+<link rel="preload" as="image" href="brand-title.png?v=37e379ee">
+<link rel="preload" as="image" href="brand-tagline.png?v=255f2c61">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
 <title>마카롱 에펠탑 쌓기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Hahmlet:wght@300;400;500&family=Jost:ital,wght@0,300;0,400;1,300&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Hahmlet:wght@300;400;500&display=swap">
 <style>
 /* Layout: one full-bleed canvas (a Paris square that climbs into the night sky) under a floating pâtisserie-label HUD; dialogs are gilded box labels */
 :root{
@@ -243,13 +245,15 @@ kbd:first-child{margin-left:0}
 .sp-rule svg{width:15px;height:15px;stroke:currentColor;stroke-width:1;fill:none;stroke-linecap:round}
 .sp-title{display:flex;flex-direction:column;gap:.34em;margin:0;padding-left:.24em;font-family:"Jost","Futura","Century Gothic",var(--f-body);font-weight:300;font-size:clamp(21px,6.9vw,34px);line-height:1.1;letter-spacing:.24em;white-space:nowrap;background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sp-tag{margin:clamp(16px,2.8vh,26px) 0 0;font-family:"Jost","Futura","Century Gothic",var(--f-body);font-style:italic;font-weight:300;font-size:15px;letter-spacing:.04em;color:#f5e9cf}
+.sp-timg{width:min(77.5vw,382px);aspect-ratio:var(--ar);background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat}
+.sp-tagimg{width:min(58vw,224px);aspect-ratio:var(--ar);margin-top:clamp(20px,3.4vh,32px);background:#f5e9cf;-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat}
 .splash .sp-a{opacity:0}
 .splash.go .sp-a{opacity:1;animation:spIn .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * .16s)}
 @keyframes spIn{from{opacity:0;transform:translateY(12px)}}
 @keyframes spFall{to{transform:translate3d(var(--dx,0px),calc(100vh + 30px),0)}}
 @media (max-width:340px){.sp-title{font-size:20px;letter-spacing:.2em;padding-left:.2em}}
-@media (min-width:760px) and (min-height:640px){.sp-logo{width:340px}.sp-x{font-size:28px}.sp-rule{width:260px}.sp-title{font-size:40px}.sp-tag{font-size:17px}}
-@media (max-height:520px){.sp-logo{width:min(40vw,220px)}.sp-x{margin:8px 0}.sp-rule{margin:14px 0 12px}.sp-title{font-size:22px}.sp-tag{margin-top:10px}}
+@media (min-width:760px) and (min-height:640px){.sp-logo{width:340px}.sp-x{font-size:28px}.sp-rule{width:260px}.sp-title{font-size:40px}.sp-tag{font-size:17px}.sp-timg{width:450px}.sp-tagimg{width:250px}}
+@media (max-height:520px){.sp-logo{width:min(40vw,220px)}.sp-x{margin:8px 0}.sp-rule{margin:14px 0 12px}.sp-title{font-size:22px}.sp-tag{margin-top:10px}.sp-timg{width:250px}.sp-tagimg{width:180px;margin-top:10px}}
 /* story card shown after a run: where macarons come from, then an invitation to share */
 .story-card{max-width:420px;text-align:left}
 .story-head{display:flex;flex-direction:column;align-items:center;gap:14px;margin:0 0 18px;text-align:center}
@@ -316,7 +320,7 @@ kbd:first-child{margin-left:0}
   <div class="toast" id="toast" role="status" aria-live="polite"><span class="t-eye" id="tEye"></span><strong id="tName"></strong><span class="t-sub" id="tSub"></span></div>
 </div>
 
-<section class="splash" id="pSplash" aria-label="PIERRE HERMÉ PARIS, PARK HYATT BUSAN. CHRISTMAS WINTER LOUNGE" data-ms="3400" data-after="#fbf8f3" data-font="300 30px Jost">
+<section class="splash" id="pSplash" aria-label="PIERRE HERMÉ PARIS, PARK HYATT BUSAN. CHRISTMAS WINTER LOUNGE" data-ms="3400" data-after="#fbf8f3">
   <div class="sp-snow" aria-hidden="true"></div>
   <div class="sp-frame" aria-hidden="true"></div>
   <div class="sp-inner">
@@ -324,8 +328,8 @@ kbd:first-child{margin-left:0}
     <p class="sp-x sp-a" style="--i:1" aria-hidden="true">×</p>
     <div class="sp-logo sp-a" role="img" aria-label="PARK HYATT BUSAN" data-src="brand-logo-2.png?v=c58f2ffd" style="--i:2;--ar:1400/255;--src:url(brand-logo-2.png?v=c58f2ffd)"></div>
     <div class="sp-rule sp-a" style="--i:3" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1v14M1.9 4.5l12.2 7M14.1 4.5l-12.2 7M8 3.4L6.6 2M8 3.4L9.4 2M8 12.6L6.6 14M8 12.6L9.4 14"/></svg></div>
-    <p class="sp-title sp-a" style="--i:4"><span>CHRISTMAS</span><span>WINTER LOUNGE</span></p>
-    <p class="sp-tag sp-a" style="--i:5">Sweet Moments, Brighter Winter</p>
+    <div class="sp-timg sp-a" role="img" aria-label="CHRISTMAS WINTER LOUNGE" data-src="brand-title.png?v=37e379ee" style="--i:4;--ar:1600/334;--src:url(brand-title.png?v=37e379ee)"></div>
+    <div class="sp-tagimg sp-a" role="img" aria-label="Sweet Moments, Brighter Winter" data-src="brand-tagline.png?v=255f2c61" style="--i:5;--ar:1400/100;--src:url(brand-tagline.png?v=255f2c61)"></div>
   </div>
 </section>
 <section class="overlay intro" id="pStart" aria-labelledby="startTitle">
