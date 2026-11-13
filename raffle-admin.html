@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:,">
+<title>마카롱 에펠탑 경품 추첨 명단</title>
+<style>
+/* 운영자 전용 화면: 응모 명단 보기, 엑셀용 파일 받기, 무작위 추첨, 당첨 표시. 이 컴퓨터에서 파일로 열어도 되고, 사이트의 /raffle-admin 으로도 열린다(명단은 토큰이 맞아야 서버가 준다) */
+:root{--paper:#fbf8f3;--card:#fff;--ink:#171315;--mute:#7b7073;--hair:rgba(23,19,21,.14);--hair2:rgba(23,19,21,.38);--gold:#94722b;--wash:rgba(195,154,69,.12);--bad:#b0304f;--ok:#2f6b4f}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.55 "Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;word-break:keep-all;overflow-wrap:break-word}
+main{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
+h1{margin:0 0 4px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+h2{margin:0 0 12px;font-size:15px;font-weight:600}
+.lede{margin:0 0 22px;color:var(--mute)}
+.card{margin:0 0 16px;padding:18px 18px 16px;background:var(--card);border:1px solid var(--hair)}
+.row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--mute)}
+input[type=text],input[type=password],input[type=number],input[type=datetime-local],input[type=search],select{height:40px;padding:0 11px;border:1px solid var(--hair2);border-radius:0;background:#fff;color:var(--ink);font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+input[type=number]{width:96px}
+#token{width:min(340px,70vw)}
+button{height:40px;padding:0 16px;border:1px solid var(--ink);border-radius:0;background:#fff;color:var(--ink);font:inherit;font-weight:500;cursor:pointer}
+button.pri{background:var(--ink);color:#fff}
+button.sm{height:30px;padding:0 10px;font-size:12.5px;font-weight:400;border-color:var(--hair2)}
+button.warn{border-color:var(--bad);color:var(--bad)}
+button:disabled{opacity:.45;cursor:default}
+.chk{display:inline-flex;align-items:center;gap:7px;height:40px;font-size:13.5px;color:var(--ink);cursor:pointer}
+.chk input{width:17px;height:17px;margin:0;accent-color:var(--ink)}
+.msg{min-height:1.5em;margin:10px 0 0;font-size:13px}
+.msg.err{color:var(--bad)}
+.msg.ok{color:var(--ok)}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}
+.tile{padding:14px 16px;background:var(--card);border:1px solid var(--hair)}
+.tile b{display:block;font-size:26px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.tile span{font-size:12px;color:var(--mute)}
+.result{margin:14px 0 0;padding:16px;background:var(--wash)}
+.result h3{margin:0 0 4px;font-size:15px}
+.result p{margin:0 0 10px;font-size:12.5px;color:var(--mute)}
+.result ol{margin:0 0 14px;padding:0 0 0 22px;font-size:16px;line-height:1.9}
+.result ol span{margin-left:10px;font-variant-numeric:tabular-nums}
+.result ol em{margin-left:10px;font-style:normal;font-size:12.5px;color:var(--mute)}
+.tablewrap{overflow-x:auto;border:1px solid var(--hair);background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--hair)}
+th{position:sticky;top:0;background:#f4efe7;font-size:12px;font-weight:500;color:var(--mute)}
+td.num,th.num{text-align:right}
+tr.win td{background:var(--wash)}
+.badge{display:inline-block;padding:1px 8px;background:var(--ink);color:#fff;font-size:11.5px}
+.empty{padding:34px 12px;text-align:center;color:var(--mute)}
+.note{margin:10px 0 0;font-size:12.5px;color:var(--mute)}
+@media (max-width:720px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile b{font-size:21px}main{padding:22px 14px 70px}}
+@media print{.noprint{display:none!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<main>
+  <h1>마카롱 에펠탑 경품 추첨 명단</h1>
+  <p class="lede">게임에서 성함과 연락처를 남긴 분들의 명단이에요. 연락처가 들어 있으니 이 화면과 내려받은 파일은 추첨을 맡은 사람만 봐 주세요.</p>
+
+  <section class="card noprint">
+    <h2>명단 불러오기</h2>
+    <form class="row" id="fLoad">
+      <label class="f">운영자 토큰<input id="token" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="raffle-admin-token.txt 의 값"></label>
+      <button class="pri" type="submit">명단 불러오기</button>
+      <button type="button" id="btnForget">토큰 지우기</button>
+      <label class="chk"><input type="checkbox" id="mask">화면에 띄울 때 성함과 번호 가리기</label>
+    </form>
+    <p class="msg" id="loadMsg" role="status"></p>
+  </section>
+
+  <div class="tiles" id="tiles" hidden>
+    <div class="tile"><b id="tAll">0</b><span>응모한 분</span></div>
+    <div class="tile"><b id="tTop">0</b><span>꼭대기(330m)까지 쌓은 분</span></div>
+    <div class="tile"><b id="tWin">0</b><span>당첨으로 표시한 분</span></div>
+    <div class="tile"><b id="tLast">없음</b><span>가장 최근 응모</span></div>
+  </div>
+
+  <section class="card noprint" id="drawCard" hidden>
+    <h2>추첨하기</h2>
+    <div class="row">
+      <label class="f">추첨 대상
+        <select id="dPool">
+          <option value="all">응모한 분 전체</option>
+          <option value="top">꼭대기(330m)까지 쌓은 분만</option>
+          <option value="min">기록이 아래 높이 이상인 분만</option>
+        </select>
+      </label>
+      <label class="f" id="dMinWrap" hidden>높이 (m)<input id="dMin" type="number" min="0" max="830" step="0.1" value="100"></label>
+      <label class="f">이 시각까지 응모한 분만 (비우면 전부)<input id="dUntil" type="datetime-local"></label>
+      <label class="f">뽑을 인원<input id="dCount" type="number" min="1" max="500" value="1"></label>
+      <label class="f">경품 이름 (선택)<input id="dPrize" type="text" maxlength="60" placeholder="예: 마카롱 기프트 박스"></label>
+      <label class="chk"><input type="checkbox" id="dSkipWon" checked>이미 당첨된 분은 빼기</label>
+      <button class="pri" type="button" id="btnDraw">추첨하기</button>
+    </div>
+    <p class="note">추첨은 이 브라우저가 암호용 난수로 대상을 고르게 섞어 앞에서부터 뽑아요. "당첨으로 저장"을 눌러야 명단에 표시돼요.</p>
+    <div class="result" id="drawResult" hidden>
+      <h3 id="drTitle"></h3>
+      <p id="drSub"></p>
+      <ol id="drList"></ol>
+      <div class="row">
+        <button class="pri" type="button" id="btnSaveWin">당첨으로 저장</button>
+        <button type="button" id="btnRedraw">다시 뽑기</button>
+        <button type="button" id="btnDropDraw">결과 닫기</button>
+      </div>
+    </div>
+    <p class="msg" id="drawMsg" role="status"></p>
+  </section>
+
+  <section id="listSec" hidden>
+    <div class="row noprint" style="margin:0 0 10px">
+      <label class="f">찾기<input id="q" type="search" placeholder="성함이나 번호 끝자리"></label>
+      <label class="f">보기
+        <select id="view"><option value="all">전체</option><option value="win">당첨된 분만</option><option value="top">꼭대기까지 쌓은 분만</option></select>
+      </label>
+      <button type="button" id="btnCsv">엑셀용 파일(CSV) 받기</button>
+      <button type="button" id="btnReload">새로 고침</button>
+      <span class="note" id="listInfo" style="margin:0 0 9px"></span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th class="num">번호</th><th>응모 시각</th><th>성함</th><th>연락처</th><th class="num">기록</th><th class="num">마카롱</th><th class="num">응모 횟수</th><th>들어온 길</th><th>당첨</th><th class="noprint"></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty" hidden>아직 응모한 분이 없어요.</div>
+    </div>
+    <p class="note">같은 번호는 한 줄만 있어요. 여러 번 응모하면 가장 높은 기록이 남고 응모 횟수가 올라가요. 기록은 게임이 보낸 값이라 참고용이에요.</p>
+  </section>
+</main>
+
+<script>window.RAFFLE_ADMIN = {"url": "https://ztfriusbpljoqlbgoobw.supabase.co", "key": "sb_publishable_50lzerFBxbHoUiZlbNBXxg_LSxipORP"};</script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+// 서버 주소와 공개 키는 raffle-admin-config.js(게임과 같은 값. 사이트에 올린 판은 publish_web.py 가 이 자리에 넣는다).
+// 시험할 때만 ?api=http://127.0.0.1:포트 로 가짜 서버를 가리킨다. 이 컴퓨터에서 연 화면(파일, localhost)에서만 듣고 사이트에 올린 판에서는 무시한다
+const CFG = Object.assign({ url: '', key: '' }, window.RAFFLE_ADMIN || {});
+const apiParam = new URLSearchParams(location.search).get('api');
+const isLocal = location.protocol === 'file:' || /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+if (isLocal && apiParam && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(apiParam)){ CFG.url = apiParam; CFG.key = CFG.key || 'test'; }
+
+let ROWS = [], PICK = null, TOKEN = '';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const masked = () => $('mask').checked;
+const fmtPhone = d => { d = String(d || ''); return d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : d; };
+const showPhone = d => masked() ? fmtPhone(d).replace(/-(\d+)-/, (m, a) => '-' + '*'.repeat(a.length) + '-') : fmtPhone(d);
+const showName = n => { n = String(n || ''); return !masked() ? n : n.length <= 2 ? n[0] + '*' : n[0] + '*'.repeat(n.length - 2) + n[n.length - 1]; };
+const fmtH = h => (Math.round(+h * 10) / 10).toFixed(1).replace(/\.0$/, '') + 'm';
+const pad = n => String(n).padStart(2, '0');
+function fmtAt(iso){ const d = new Date(iso); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtFull(iso){ const d = new Date(iso); return isNaN(d) ? '' : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function say(id, text, kind){ const m = $(id); m.textContent = text || ''; m.className = 'msg' + (kind ? ' ' + kind : ''); }
+
+async function rpc(fn, body){
+  if (!CFG.url || !CFG.key) throw new Error('config');
+  const ac = new AbortController(), timer = setTimeout(() => ac.abort(), 15000);
+  try {
+    const r = await fetch(`${CFG.url}/rest/v1/rpc/${fn}`, { method: 'POST', signal: ac.signal,
+      headers: { apikey: CFG.key, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error('http ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+function failText(e){
+  return e && e.message === 'config' ? '서버 설정이 비어 있어요.'
+    : e && /^http 404/.test(e.message) ? '서버에 응모 표가 아직 없어요. raffle-schema.sql 을 먼저 적용해야 해요.'
+    : '서버에 닿지 못했어요. 인터넷 연결을 확인해 주세요.';
+}
+
+async function load(quiet){
+  const t = $('token').value.trim();
+  if (!t){ say('loadMsg', '운영자 토큰을 넣어 주세요.', 'err'); return false; }
+  if (!quiet) say('loadMsg', '불러오는 중이에요…');
+  try {
+    const r = await rpc('macaron_entries_list', { p_token: t });
+    if (!r || !r.ok){ say('loadMsg', r && r.error === 'token' ? '토큰이 맞지 않아요.' : '명단을 불러오지 못했어요.', 'err'); return false; }
+    TOKEN = t;
+    try { sessionStorage.setItem('raffleAdminToken', t); } catch (e) {}
+    ROWS = r.rows || [];
+    say('loadMsg', `${fmtFull(new Date().toISOString())} 기준 ${ROWS.length}명을 불러왔어요.`, 'ok');
+    ['tiles', 'drawCard', 'listSec'].forEach(id => { $(id).hidden = false; });
+    render();
+    return true;
+  } catch (e) { say('loadMsg', failText(e), 'err'); return false; }
+}
+
+function visibleRows(){
+  const q = $('q').value.trim().replace(/-/g, ''), v = $('view').value;
+  return ROWS.filter(r => (v === 'all' || (v === 'win' && r.winner) || (v === 'top' && +r.height >= 330))
+    && (!q || String(r.name).includes(q) || String(r.phone).endsWith(q) || String(r.phone).includes(q)));
+}
+function render(){
+  $('tAll').textContent = ROWS.length.toLocaleString('ko-KR');
+  $('tTop').textContent = ROWS.filter(r => +r.height >= 330).length.toLocaleString('ko-KR');
+  $('tWin').textContent = ROWS.filter(r => r.winner).length.toLocaleString('ko-KR');
+  $('tLast').textContent = ROWS.length ? fmtAt(ROWS.reduce((a, r) => r.at > a ? r.at : a, ROWS[0].at)) : '없음';
+  const list = visibleRows();
+  $('rows').innerHTML = list.map(r => `<tr class="${r.winner ? 'win' : ''}">
+    <td class="num">${r.id}</td><td title="${esc(fmtFull(r.at))}">${esc(fmtAt(r.at))}</td><td>${esc(showName(r.name))}</td><td>${esc(showPhone(r.phone))}</td>
+    <td class="num">${esc(fmtH(r.height))}</td><td class="num">${r.macarons}</td><td class="num">${r.tries}</td><td>${esc(r.source || '')}</td>
+    <td>${r.winner ? `<span class="badge">당첨</span> ${esc(r.prize || '')}` : ''}</td>
+    <td class="noprint">${r.winner ? `<button class="sm" data-act="unwin" data-id="${r.id}">당첨 취소</button> ` : ''}<button class="sm warn" data-act="del" data-id="${r.id}">지우기</button></td></tr>`).join('');
+  $('empty').hidden = list.length > 0;
+  $('empty').textContent = ROWS.length ? '조건에 맞는 분이 없어요.' : '아직 응모한 분이 없어요.';
+  $('listInfo').textContent = list.length === ROWS.length ? `${ROWS.length}명` : `${ROWS.length}명 가운데 ${list.length}명`;
+  if (PICK) showPick();
+}
+
+/* ---------- 추첨 ---------- */
+function randInt(n){   // 0 이상 n 미만을 치우침 없이
+  const lim = Math.floor(0x100000000 / n) * n, b = new Uint32Array(1);
+  do { crypto.getRandomValues(b); } while (b[0] >= lim);
+  return b[0] % n;
+}
+function shuffled(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pool(){
+  const kind = $('dPool').value, min = kind === 'top' ? 330 : kind === 'min' ? (parseFloat($('dMin').value) || 0) : 0;
+  const until = $('dUntil').value ? new Date($('dUntil').value).getTime() : null, skip = $('dSkipWon').checked;
+  const list = ROWS.filter(r => +r.height >= min && (!until || new Date(r.at).getTime() <= until) && !(skip && r.winner));
+  const label = (kind === 'top' ? '꼭대기까지 쌓은 분' : kind === 'min' ? `기록 ${fmtH(min)} 이상인 분` : '응모한 분 전체')
+    + (until ? `, ${fmtFull(new Date(until).toISOString())}까지 응모` : '') + (skip ? ', 이미 당첨된 분 제외' : '');
+  return { list, label };
+}
+function draw(){
+  const k = Math.floor(+$('dCount').value);
+  if (!(k >= 1)){ say('drawMsg', '뽑을 인원을 1명 이상으로 적어 주세요.', 'err'); return; }
+  const p = pool();
+  if (!p.list.length){ say('drawMsg', '조건에 맞는 분이 없어요.', 'err'); $('drawResult').hidden = true; PICK = null; return; }
+  if (k > p.list.length){ say('drawMsg', `대상이 ${p.list.length}명이라 ${k}명을 뽑을 수 없어요.`, 'err'); return; }
+  PICK = { ids: shuffled(p.list).slice(0, k).map(r => r.id), label: p.label, size: p.list.length, at: new Date().toISOString(), prize: $('dPrize').value.trim(), saved: false };
+  say('drawMsg', '');
+  showPick();
+}
+function showPick(){
+  const rows = PICK.ids.map(id => ROWS.find(r => r.id === id)).filter(Boolean);
+  $('drTitle').textContent = PICK.saved ? `당첨 ${rows.length}명을 저장했어요` : `추첨 결과 ${rows.length}명`;
+  $('drSub').textContent = `대상: ${PICK.label} (${PICK.size}명). 추첨 시각 ${fmtFull(PICK.at)}.` + (PICK.prize ? ` 경품: ${PICK.prize}.` : '');
+  $('drList').innerHTML = rows.map(r => `<li>${esc(showName(r.name))}<span>${esc(showPhone(r.phone))}</span><em>${esc(fmtH(r.height))}, ${esc(fmtAt(r.at))} 응모</em></li>`).join('');
+  $('btnSaveWin').hidden = PICK.saved; $('btnRedraw').hidden = PICK.saved;
+  $('drawResult').hidden = false;
+}
+async function saveWinners(){
+  if (!PICK || PICK.saved) return;
+  $('btnSaveWin').disabled = true;
+  try {
+    const r = await rpc('macaron_entries_mark', { p_token: TOKEN, p_ids: PICK.ids, p_winner: true, p_prize: PICK.prize || null });
+    if (!r || !r.ok){ say('drawMsg', '저장하지 못했어요. 토큰을 확인해 주세요.', 'err'); return; }
+    PICK.saved = true;
+    say('drawMsg', `${r.changed}명을 당첨으로 표시했어요.`, 'ok');
+    await load(true);
+  } catch (e) { say('drawMsg', failText(e), 'err'); }
+  finally { $('btnSaveWin').disabled = false; }
+}
+
+/* ---------- 엑셀용 파일 ---------- */
+function csv(){
+  const cell = v => { v = String(v == null ? '' : v); return /^[=+\-@\t\r]/.test(v) ? `"'${v.replace(/"/g, '""')}"` : /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  const head = ['번호', '응모 시각', '성함', '연락처', '기록(m)', '마카롱 수', '응모 횟수', '들어온 길', '동의 안내문 판', '당첨', '경품', '당첨 표시 시각'];
+  const lines = [head.join(',')].concat(visibleRows().map(r => [r.id, fmtFull(r.at), r.name, fmtPhone(r.phone), r.height, r.macarons, r.tries, r.source || '', r.consent || '',
+    r.winner ? '당첨' : '', r.prize || '', r.won_at ? fmtFull(r.won_at) : ''].map(cell).join(',')));
+  const d = new Date(), name = `macaron-raffle-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.csv`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  window.__lastCsv = lines.join('\n');
+}
+
+/* ---------- 줄마다 하는 일 ---------- */
+$('rows').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const id = +b.dataset.id, row = ROWS.find(r => r.id === id); if (!row) return;
+  try {
+    if (b.dataset.act === 'unwin'){
+      if (!confirm(`${row.name} 님의 당첨 표시를 지울까요?`)) return;
+      const r = await rpc('macaron_entries_mark', { p_token: TOKEN, p_ids: [id], p_winner: false });
+      if (!r || !r.ok) throw new Error('fail');
+    } else {
+      if (!confirm(`${row.name} 님(${fmtPhone(row.phone)})의 응모를 지울까요? 되돌릴 수 없어요.`)) return;
+      const r = await rpc('macaron_entries_delete', { p_token: TOKEN, p_id: id });
+      if (!r || !r.ok) throw new Error('fail');
+      if (PICK && !PICK.saved && PICK.ids.includes(id)){ PICK = null; $('drawResult').hidden = true; }
+    }
+    await load(true);
+  } catch (err) { say('loadMsg', err.message === 'fail' ? '처리하지 못했어요. 토큰을 확인해 주세요.' : failText(err), 'err'); }
+});
+
+$('fLoad').addEventListener('submit', e => { e.preventDefault(); load(false); });
+$('btnReload').addEventListener('click', () => load(false));
+$('btnForget').addEventListener('click', () => {
+  try { sessionStorage.removeItem('raffleAdminToken'); } catch (e) {}
+  $('token').value = ''; TOKEN = ''; ROWS = []; PICK = null;
+  ['tiles', 'drawCard', 'listSec'].forEach(id => { $(id).hidden = true; });
+  say('loadMsg', '토큰과 화면의 명단을 지웠어요.');
+});
+$('mask').addEventListener('change', render);
+$('q').addEventListener('input', render);
+$('view').addEventListener('change', render);
+$('dPool').addEventListener('change', () => { $('dMinWrap').hidden = $('dPool').value !== 'min'; });
+$('btnDraw').addEventListener('click', draw);
+$('btnRedraw').addEventListener('click', draw);
+$('btnDropDraw').addEventListener('click', () => { PICK = null; $('drawResult').hidden = true; say('drawMsg', ''); });
+$('btnSaveWin').addEventListener('click', saveWinners);
+$('btnCsv').addEventListener('click', csv);
+
+try { const t = sessionStorage.getItem('raffleAdminToken'); if (t){ $('token').value = t; load(false); } } catch (e) {}
+if (!CFG.url) say('loadMsg', '서버 설정이 비어 있어요.', 'err');
+})();
+</script>
+</body>
+</html>
