@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 에펠탑 쌓기(시연용)">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130654">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130708">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -134,6 +134,7 @@ kbd:first-child{margin-left:0}
 .logo-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:min(50vw,210px);max-width:100%;min-height:46px;margin:0 0 clamp(6px,1.6vh,20px);padding:8px 10px;border:1px dashed var(--hair-strong)}
 .logo-slot b{padding-left:.4em;font-family:var(--f-num);font-weight:500;font-size:12px;letter-spacing:.4em;text-transform:uppercase;line-height:1}
 .logo-slot span{font-size:10px;letter-spacing:.08em;line-height:1;color:var(--lux-mute)}
+.logo-img{display:block;width:min(64vw,250px);max-width:100%;height:auto;margin:4px 0 clamp(12px,2.2vh,26px)}
 .hero{position:relative;display:grid;grid-template-columns:auto auto;align-items:end;justify-content:center;column-gap:clamp(14px,4vw,26px);padding-top:0}
 .hero::after{content:"";position:absolute;left:50%;bottom:7px;width:calc(100% + 24px);max-width:340px;height:1px;transform:translateX(-50%);background:var(--hair)}
 .hero-mac{display:flex;flex-direction:column;align-items:center}
@@ -242,7 +243,7 @@ kbd:first-child{margin-left:0}
 @keyframes fadeIn{from{opacity:0}}
 @keyframes rise{from{opacity:0;transform:translateY(18px) scale(.97)}}
 @keyframes fade{from{opacity:0}}
-@media (max-height:700px){.logo-slot{width:min(44vw,170px);min-height:34px;padding:5px 8px;margin-bottom:4px}.eiffel{height:calc(var(--stack-h,230px) * 1.2);width:calc(var(--stack-h,230px) * 0.37)}.intro h1{margin-top:10px;font-size:30px}.intro-sub{font-size:13px}.facts{margin:12px 0;padding:11px 0 9px}.facts dd{font-size:25px}.intro-hint{margin-top:9px}.howto{margin-top:8px}}
+@media (max-height:700px){.logo-slot{width:min(44vw,170px);min-height:34px;padding:5px 8px;margin-bottom:4px}.logo-img{width:min(54vw,200px);margin:2px 0 8px}.eiffel{height:calc(var(--stack-h,230px) * 1.2);width:calc(var(--stack-h,230px) * 0.37)}.intro h1{margin-top:10px;font-size:30px}.intro-sub{font-size:13px}.facts{margin:12px 0;padding:11px 0 9px}.facts dd{font-size:25px}.intro-hint{margin-top:9px}.howto{margin-top:8px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -292,7 +293,7 @@ kbd:first-child{margin-left:0}
 
 <section class="overlay intro" id="pStart" aria-labelledby="startTitle">
   <div class="intro-inner">
-    <div class="logo-slot" role="img" aria-label="브랜드 로고를 넣는 자리"><b>Your Logo</b><span>브랜드 로고 표시 영역</span></div>
+    <img class="logo-img" src="brand-logo.png?v=a0b7ca9d" width="1400" height="248" alt="PIERRE HERMÉ PARIS">
     <div class="hero" aria-hidden="true">
       <div class="hero-mac">
         <div class="stack" id="heroStack"></div>
