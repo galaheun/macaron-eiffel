@@ -4,21 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
-<meta name="theme-color" content="#fbf8f3">
+<meta name="theme-color" content="#5a1a24">
 <meta property="og:type" content="website">
 <meta property="og:title" content="마카롱 에펠탑 쌓기">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130713">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130734">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="brand-logo.png?v=a0b7ca9d">
+<link rel="preload" as="image" href="brand-logo-2.png?v=c58f2ffd">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
 <title>마카롱 에펠탑 쌓기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Hahmlet:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Hahmlet:wght@300;400;500&family=Jost:ital,wght@0,300;0,400;1,300&display=swap">
 <style>
 /* Layout: one full-bleed canvas (a Paris square that climbs into the night sky) under a floating pâtisserie-label HUD; dialogs are gilded box labels */
 :root{
@@ -225,6 +227,29 @@ kbd:first-child{margin-left:0}
 .raffle-done ul{list-style:none;margin:18px 0 22px;padding:0;border-top:1px solid var(--hair);text-align:left}
 .raffle-done li{padding:11px 2px;border-bottom:1px solid var(--hair);font-size:13px;line-height:1.6;color:#4a4144}
 .raffle-done .lux-link{display:flex;margin:12px auto 0}
+/* opening splash: the event title card shown first, then it fades into the intro. Only in builds where publish_web.py fills the slot (brand-config.json "splash") */
+.splash{position:fixed;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden;padding:max(30px,env(safe-area-inset-top,0px)) 26px max(30px,env(safe-area-inset-bottom,0px));background:radial-gradient(70% 34% at 50% 0%,rgba(255,196,128,.2),rgba(255,196,128,0)),radial-gradient(120% 75% at 50% 42%,#7f2a33 0%,#6b1f2a 38%,#4b141c 76%,#3b0d15 100%);color:#f3e2bb;text-align:center;cursor:pointer;transition:opacity .7s ease}
+.splash.out,.splash.out-fast{opacity:0;pointer-events:none}
+.splash.out-fast{transition-duration:.35s}
+.sp-frame{position:absolute;inset:max(14px,env(safe-area-inset-top,0px)) 14px max(14px,env(safe-area-inset-bottom,0px));border:1px solid rgba(226,193,128,.6);pointer-events:none}
+.sp-frame::after{content:"";position:absolute;inset:5px;border:1px solid rgba(226,193,128,.24)}
+.sp-snow{position:absolute;inset:0;pointer-events:none}
+.sp-snow i{position:absolute;top:-14px;border-radius:50%;background:#fff3d4;animation:spFall linear infinite}
+.sp-inner{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px}
+.sp-logo{width:min(66vw,280px);aspect-ratio:var(--ar);background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat}
+.sp-x{margin:clamp(12px,2.4vh,22px) 0;font:300 24px/1 var(--f-num);color:#e2c180}
+.sp-rule{display:flex;align-items:center;gap:12px;width:min(52vw,210px);margin:clamp(22px,4.2vh,40px) 0 clamp(20px,3.8vh,36px);color:#e2c180}
+.sp-rule::before,.sp-rule::after{content:"";flex:1;height:1px;background:currentColor;opacity:.7}
+.sp-rule svg{width:15px;height:15px;stroke:currentColor;stroke-width:1;fill:none;stroke-linecap:round}
+.sp-title{display:flex;flex-direction:column;gap:.34em;margin:0;padding-left:.24em;font-family:"Jost","Futura","Century Gothic",var(--f-body);font-weight:300;font-size:clamp(21px,6.9vw,34px);line-height:1.1;letter-spacing:.24em;white-space:nowrap;background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sp-tag{margin:clamp(16px,2.8vh,26px) 0 0;font-family:"Jost","Futura","Century Gothic",var(--f-body);font-style:italic;font-weight:300;font-size:15px;letter-spacing:.04em;color:#f5e9cf}
+.splash .sp-a{opacity:0}
+.splash.go .sp-a{opacity:1;animation:spIn .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * .16s)}
+@keyframes spIn{from{opacity:0;transform:translateY(12px)}}
+@keyframes spFall{to{transform:translate3d(var(--dx,0px),calc(100vh + 30px),0)}}
+@media (max-width:340px){.sp-title{font-size:20px;letter-spacing:.2em;padding-left:.2em}}
+@media (min-width:760px) and (min-height:640px){.sp-logo{width:340px}.sp-x{font-size:28px}.sp-rule{width:260px}.sp-title{font-size:40px}.sp-tag{font-size:17px}}
+@media (max-height:520px){.sp-logo{width:min(40vw,220px)}.sp-x{margin:8px 0}.sp-rule{margin:14px 0 12px}.sp-title{font-size:22px}.sp-tag{margin-top:10px}}
 /* story card shown after a run: where macarons come from, then an invitation to share */
 .story-card{max-width:420px;text-align:left}
 .story-head{display:flex;flex-direction:column;align-items:center;gap:14px;margin:0 0 18px;text-align:center}
@@ -291,6 +316,18 @@ kbd:first-child{margin-left:0}
   <div class="toast" id="toast" role="status" aria-live="polite"><span class="t-eye" id="tEye"></span><strong id="tName"></strong><span class="t-sub" id="tSub"></span></div>
 </div>
 
+<section class="splash" id="pSplash" aria-label="PIERRE HERMÉ PARIS, PARK HYATT BUSAN. CHRISTMAS WINTER LOUNGE" data-ms="3400" data-after="#fbf8f3" data-font="300 30px Jost">
+  <div class="sp-snow" aria-hidden="true"></div>
+  <div class="sp-frame" aria-hidden="true"></div>
+  <div class="sp-inner">
+    <div class="sp-logo sp-a" role="img" aria-label="PIERRE HERMÉ PARIS" data-src="brand-logo.png?v=a0b7ca9d" style="--i:0;--ar:1400/248;--src:url(brand-logo.png?v=a0b7ca9d)"></div>
+    <p class="sp-x sp-a" style="--i:1" aria-hidden="true">×</p>
+    <div class="sp-logo sp-a" role="img" aria-label="PARK HYATT BUSAN" data-src="brand-logo-2.png?v=c58f2ffd" style="--i:2;--ar:1400/255;--src:url(brand-logo-2.png?v=c58f2ffd)"></div>
+    <div class="sp-rule sp-a" style="--i:3" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1v14M1.9 4.5l12.2 7M14.1 4.5l-12.2 7M8 3.4L6.6 2M8 3.4L9.4 2M8 12.6L6.6 14M8 12.6L9.4 14"/></svg></div>
+    <p class="sp-title sp-a" style="--i:4"><span>CHRISTMAS</span><span>WINTER LOUNGE</span></p>
+    <p class="sp-tag sp-a" style="--i:5">Sweet Moments, Brighter Winter</p>
+  </div>
+</section>
 <section class="overlay intro" id="pStart" aria-labelledby="startTitle">
   <div class="intro-inner">
     <img class="logo-img" src="brand-logo.png?v=a0b7ca9d" width="1400" height="248" alt="PIERRE HERMÉ PARIS">
@@ -1793,6 +1830,7 @@ function setMuted(m){
 }
 cv.addEventListener('pointerdown', e => { e.preventDefault(); audio(); if (S.mode === 'play') drop(); });
 addEventListener('keydown', e => {
+  if (splashOn){ e.preventDefault(); closeSplash(true); return; }   // 접속 인트로가 떠 있으면 어떤 키든 인트로만 닫는다
   if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;   // 닉네임을 적는 중에는 단축키를 쓰지 않는다
   const onButton = document.activeElement && document.activeElement.tagName === 'BUTTON';
   if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter'){
@@ -2071,6 +2109,34 @@ $('btnRaffleFix').addEventListener('click', () => openRaffle(true));
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 addEventListener('resize', () => { resize(); buildRail(); if (!$('pStart').hidden) buildHero(); });
 
+/* ---------- opening splash: only in builds where publish_web.py put one in (brand-config.json "splash") ---------- */
+const splash = $('pSplash');
+let splashOn = !!splash;
+function closeSplash(fast){
+  if (!splashOn) return;
+  splashOn = false;
+  splash.classList.add(fast ? 'out-fast' : 'out');
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc && splash.dataset.after) tc.setAttribute('content', splash.dataset.after);
+  setTimeout(() => splash.remove(), REDUCED ? 0 : fast ? 380 : 760);
+}
+function startSplash(){
+  if (!splash) return;
+  let started = false;
+  const go = () => { if (started) return; started = true; splash.classList.add('go'); setTimeout(() => closeSplash(false), +splash.dataset.ms || 3200); };
+  // wait for the logo images and the title font so the first frame is whole, but never longer than 1.2 s
+  const waits = [...splash.querySelectorAll('[data-src]')].map(el => new Promise(res => { const im = new Image(); im.onload = im.onerror = res; im.src = el.dataset.src; }));
+  if (document.fonts && document.fonts.load && splash.dataset.font) waits.push(document.fonts.load(splash.dataset.font).catch(() => {}));
+  Promise.all(waits).then(go); setTimeout(go, 1200);
+  const box = splash.querySelector('.sp-snow');
+  if (box && !REDUCED) for (let i = 0; i < 26; i++){
+    const f = document.createElement('i'), d = (2 + Math.random() * 4).toFixed(1);
+    f.style.cssText = `left:${(Math.random() * 100).toFixed(1)}%;width:${d}px;height:${d}px;opacity:${(0.22 + Math.random() * 0.5).toFixed(2)};animation-duration:${(7 + Math.random() * 8).toFixed(1)}s;animation-delay:-${(Math.random() * 14).toFixed(1)}s;--dx:${Math.round(Math.random() * 44 - 22)}px`;
+    box.appendChild(f);
+  }
+  splash.addEventListener('pointerdown', e => { e.preventDefault(); closeSplash(true); });
+}
+
 /* ---------- boot ---------- */
 function boot(data){
   data = data || {};
@@ -2088,11 +2154,13 @@ function boot(data){
     S.camH = Math.max(camMin(), S.stack.length * MAC_H);
     S.inst = analyze(S.stack).inst;
     buildRail(); setMode('play'); pause();
+    if (splash){ splashOn = false; splash.remove(); }
   } else {
     setMode('title'); buildRail();
     S.cur = { x: 0, dir: 1, y: DROP_GAP, state: 'hold', c: 0, born: -1, vy: 0, vx: 0 };
     buildHero(); buildHeroEiffel();
     showPanel('pStart');
+    startSplash();
   }
   requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 }
