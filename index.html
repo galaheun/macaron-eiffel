@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 에펠탑 쌓기">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611130908">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611161519">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -152,7 +152,7 @@ kbd:first-child{margin-left:0}
 .logo-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:min(50vw,210px);max-width:100%;min-height:46px;margin:0 0 clamp(6px,1.6vh,20px);padding:8px 10px;border:1px dashed var(--hair-strong)}
 .logo-slot b{padding-left:.4em;font-family:var(--f-num);font-weight:500;font-size:12px;letter-spacing:.4em;text-transform:uppercase;line-height:1}
 .logo-slot span{font-size:10px;letter-spacing:.08em;line-height:1;color:var(--lux-mute)}
-.logo-img{display:block;width:min(64vw,250px);max-width:100%;height:auto;margin:4px 0 clamp(12px,2.2vh,26px)}
+.logo-img{display:block;width:min(54vw,210px);max-width:100%;height:auto;margin:4px 0 clamp(12px,2.2vh,26px)}
 .hero{position:relative;display:grid;grid-template-columns:auto auto;align-items:end;justify-content:center;column-gap:clamp(14px,4vw,26px);padding-top:0}
 .hero::after{content:"";position:absolute;left:50%;bottom:7px;width:calc(100% + 24px);max-width:340px;height:1px;transform:translateX(-50%);background:var(--hair)}
 .hero-mac{display:flex;flex-direction:column;align-items:center}
@@ -255,7 +255,7 @@ kbd:first-child{margin-left:0}
 .sp-scene.on{opacity:1;visibility:visible;transition:opacity 1.3s ease}
 .sp-inner{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;max-width:440px}
 .sp-title-scene .sp-inner{margin-bottom:clamp(0px,13vh,150px)}
-.sp-logo{width:min(66vw,280px);aspect-ratio:var(--ar);background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat}
+.sp-logo{--w:min(66vw,280px);width:calc(var(--w) * var(--k,1));aspect-ratio:var(--ar);background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat}
 .sp-x{margin:clamp(12px,2.4vh,22px) 0;font:300 24px/1 var(--f-num);color:#e2c180}
 .sp-rule{display:flex;align-items:center;gap:12px;width:min(52vw,210px);margin:clamp(22px,4.2vh,40px) 0 clamp(18px,3.4vh,32px);color:#e2c180}
 .sp-rule::before,.sp-rule::after{content:"";flex:1;height:1px;background:currentColor;opacity:.7}
@@ -283,8 +283,8 @@ kbd:first-child{margin-left:0}
 @keyframes spIn{from{opacity:0;transform:translateY(12px)}}
 @keyframes spFall{to{transform:translate3d(var(--dx,0px),calc(100vh + 30px),0)}}
 @media (max-width:340px){.sp-scene{padding-left:26px;padding-right:26px}}
-@media (min-width:760px) and (min-height:640px){.sp-logo{width:340px}.sp-x{font-size:28px}.sp-rule{width:260px}.sp-title span:first-child{font-size:76px}.sp-title span + span{font-size:24px}.sp-tag{font-size:18px}.sp-timg{width:450px}.sp-tagimg{width:250px}.sp-line{font-size:28px}.sp-eye{font-size:13px}}
-@media (max-height:520px){.sp-scene{padding-bottom:58px}.sp-title-scene .sp-inner{margin-bottom:0}.sp-logo{width:min(34vw,200px)}.sp-x{margin:6px 0}.sp-rule{margin:10px 0 8px}.sp-title span:first-child{font-size:34px}.sp-title span + span{font-size:13px;margin-top:.3em}.sp-tag{margin-top:8px;font-size:14px}.sp-timg{width:250px}.sp-tagimg{width:180px;margin-top:10px}.sp-line{font-size:17px;line-height:1.6}.sp-eye{margin-bottom:10px}.sp-macs{display:none}.sp-foot{bottom:20px;gap:4px}}
+@media (min-width:760px) and (min-height:640px){.sp-logo{--w:340px}.sp-x{font-size:28px}.sp-rule{width:260px}.sp-title span:first-child{font-size:76px}.sp-title span + span{font-size:24px}.sp-tag{font-size:18px}.sp-timg{width:450px}.sp-tagimg{width:250px}.sp-line{font-size:28px}.sp-eye{font-size:13px}}
+@media (max-height:520px){.sp-scene{padding-bottom:58px}.sp-title-scene .sp-inner{margin-bottom:0}.sp-logo{--w:min(34vw,200px)}.sp-x{margin:6px 0}.sp-rule{margin:10px 0 8px}.sp-title span:first-child{font-size:34px}.sp-title span + span{font-size:13px;margin-top:.3em}.sp-tag{margin-top:8px;font-size:14px}.sp-timg{width:250px}.sp-tagimg{width:180px;margin-top:10px}.sp-line{font-size:17px;line-height:1.6}.sp-eye{margin-bottom:10px}.sp-macs{display:none}.sp-foot{bottom:20px;gap:4px}}
 /* story card shown after a run: where macarons come from, then an invitation to share */
 .story-card{max-width:420px;text-align:left}
 .story-head{display:flex;flex-direction:column;align-items:center;gap:14px;margin:0 0 18px;text-align:center}
@@ -303,7 +303,7 @@ kbd:first-child{margin-left:0}
 @keyframes fadeIn{from{opacity:0}}
 @keyframes rise{from{opacity:0;transform:translateY(18px) scale(.97)}}
 @keyframes fade{from{opacity:0}}
-@media (max-height:700px){.overlay.intro{padding-top:calc(env(safe-area-inset-top,0px) + 26px)}.logo-slot{width:min(44vw,170px);min-height:34px;padding:5px 8px;margin-bottom:4px}.logo-img{width:min(54vw,200px);margin:2px 0 8px}.eiffel{height:calc(var(--stack-h,230px) * 1.2);width:calc(var(--stack-h,230px) * 0.37)}.intro h1{margin-top:10px;font-size:30px}.intro-sub{font-size:13px}.facts{margin:12px 0;padding:11px 0 9px}.facts dd{font-size:25px}.intro-hint{margin-top:9px}.howto{margin-top:8px}}
+@media (max-height:700px){.overlay.intro{padding-top:calc(env(safe-area-inset-top,0px) + 26px)}.logo-slot{width:min(44vw,170px);min-height:34px;padding:5px 8px;margin-bottom:4px}.logo-img{width:min(46vw,172px);margin:2px 0 8px}.eiffel{height:calc(var(--stack-h,230px) * 1.2);width:calc(var(--stack-h,230px) * 0.37)}.intro h1{margin-top:10px;font-size:30px}.intro-sub{font-size:13px}.facts{margin:12px 0;padding:11px 0 9px}.facts dd{font-size:25px}.intro-hint{margin-top:9px}.howto{margin-top:8px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -358,7 +358,7 @@ kbd:first-child{margin-left:0}
     <div class="sp-inner">
       <div class="sp-logo sp-a" role="img" aria-label="PARK HYATT BUSAN" data-src="brand-logo-1.png?v=c58f2ffd" style="--i:0;--ar:1400/255;--src:url(brand-logo-1.png?v=c58f2ffd)"></div>
       <p class="sp-x sp-a" style="--i:1" aria-hidden="true">×</p>
-      <div class="sp-logo sp-a" role="img" aria-label="PIERRE HERMÉ PARIS" data-src="brand-logo.png?v=a0b7ca9d" style="--i:2;--ar:1400/248;--src:url(brand-logo.png?v=a0b7ca9d)"></div>
+      <div class="sp-logo sp-a" role="img" aria-label="PIERRE HERMÉ PARIS" data-src="brand-logo.png?v=a0b7ca9d" style="--i:2;--ar:1400/248;--src:url(brand-logo.png?v=a0b7ca9d);--k:0.78"></div>
       <div class="sp-rule sp-a" style="--i:3" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1v14M1.9 4.5l12.2 7M14.1 4.5l-12.2 7M8 3.4L6.6 2M8 3.4L9.4 2M8 12.6L6.6 14M8 12.6L9.4 14"/></svg></div>
       <p class="sp-title sp-a" style="--i:4"><span>Christmas</span><span>Winter Lounge</span></p>
       <p class="sp-tag sp-a" style="--i:5">Sweet Moments, Brighter Winter</p>
@@ -422,7 +422,8 @@ kbd:first-child{margin-left:0}
       <ul>
         <li><b>정중앙에 놓기</b>딱 맞으면 PERFECT예요. 5번 연속 성공하면 잃은 기회를 하나 돌려받아요.</li>
         <li><b>균형 잡기</b>한쪽으로 계속 밀리면 탑이 기울어 윗부분이 통째로 떨어져요.</li>
-        <li><b>100m부터 바람</b>떨어지는 마카롱을 옆으로 밀어요. 바람 방향을 보고 미리 맞추세요.</li>
+        <li><b>60m부터 바람</b>떨어지는 마카롱을 옆으로 밀어요. 바람 방향을 보고 미리 맞추세요.</li>
+        <li><b>갈수록 어렵게</b>높이 올라갈수록 집게가 빨라지고, 바람이 세지고, 탑이 더 흔들려요.</li>
         <li><b>기회 3번</b>마카롱을 놓치거나 탑이 무너질 때마다 하나씩 줄어요.</li>
       </ul>
     </details>
@@ -1431,12 +1432,18 @@ function wob(y){
 /* ---------- game flow ---------- */
 function setMode(m){ S.mode = m; document.body.dataset.mode = m; }
 function sliderRange(){ return clamp(W / 2 / ppm - MAC_W * 0.75, MAC_W * 1.15, MAC_W * 2.6); }
-function speedFor(n){ return MAC_W * Math.min(S.endless ? 4.7 : 4.25, 1.9 + n * 0.023); }
-function windMax(h){ return h < 100 ? 0 : Math.min(S.endless ? 9 : 7, 1.2 + (h - 100) / 200 * 5.8); }
+/* difficulty: the higher the stack, the harder it gets. Five things grow with the height:
+   the tongs move faster (and the gain itself grows), from the tower's second floor they speed up and slow down as they go,
+   the wind starts at 60 m, blows harder and turns more often, and the tower sways more. The first 50 m stay as gentle as before. */
+const HARD = { v0: 1.9, v1: 0.021, v2: 0.00019, pulse: 0.34, pulseFrom: 34, pulseFull: 96, windFrom: 60, wind0: 0.8, windTop: 10, gust: 0.45, sway: 0.2, swayFrom: 120 };
+function speedFor(n){ const k = Math.min(n, S.endless ? GOAL_N * 1.1 : GOAL_N); return MAC_W * (HARD.v0 + k * HARD.v1 + k * k * HARD.v2); }
+function pulseFor(n){ return HARD.pulse * smooth(HARD.pulseFrom, HARD.pulseFull, n); }
+function windMax(h){ return h < HARD.windFrom ? 0 : Math.min(S.endless ? HARD.windTop + 2 : HARD.windTop, HARD.wind0 + (h - HARD.windFrom) / (330 - HARD.windFrom) * (HARD.windTop - HARD.wind0)); }
+function gustFor(h){ return smooth(HARD.windFrom, 330, h); }
 function pickFlavor(){ let c; do { c = PICKS[(Math.random() * PICKS.length) | 0]; } while (c === S.lastFlavor); S.lastFlavor = c; return c; }
 function spawn(){
   const n = S.stack.length, dir = Math.random() < 0.5 ? 1 : -1;
-  S.cur = { x: S.camX - dir * sliderRange(), dir, y: n * MAC_H + DROP_GAP, state: 'hold', c: pickFlavor(), born: S.t, vy: 0, vx: 0 };
+  S.cur = { x: S.camX - dir * sliderRange(), dir, y: n * MAC_H + DROP_GAP, state: 'hold', c: pickFlavor(), born: S.t, vy: 0, vx: 0, ph: Math.random() * 6.2832 };
   S.nextAt = -1;
 }
 function resetRun(){
@@ -1685,7 +1692,7 @@ function updateHUD(dt){
   const wa = Math.abs(S.wind), showWind = wa > 0.6 && S.mode === 'play';
   if (hud.wind.hidden === showWind) hud.wind.hidden = !showWind;
   if (showWind){
-    put('wl', hud.windLbl, wa < 2.5 ? '약함' : wa < 5 ? '보통' : '강함');
+    put('wl', hud.windLbl, wa < 2.5 ? '약함' : wa < 5 ? '보통' : wa < 7.5 ? '강함' : '아주 강함');
     const dir = S.wind > 0 ? 'r' : 'l'; if (cache.wd !== dir){ cache.wd = dir; hud.wind.dataset.dir = dir; }
   }
   const max = S.endless ? 828 : 330, p = (clamp(h / max, 0, 1) * 100).toFixed(2);
@@ -1706,12 +1713,13 @@ function update(dt){
 
   // wind
   const wm = (S.mode === 'play' || S.mode === 'ending') ? windMax(topY) : 0;
-  if (S.t > S.windNext){ S.windTarget = wm === 0 ? 0 : (Math.random() < 0.2 ? 0 : (Math.random() * 2 - 1) * wm); S.windNext = S.t + 3.5 + Math.random() * 4; }
+  const gust = gustFor(topY);
+  if (S.t > S.windNext){ S.windTarget = wm === 0 ? 0 : (Math.random() < 0.2 ? 0 : (Math.random() * 2 - 1) * wm); S.windNext = S.t + (3.5 + Math.random() * 4) * (1 - HARD.gust * gust); }
   S.windTarget = clamp(S.windTarget, -wm, wm);
-  S.wind += (S.windTarget - S.wind) * (1 - Math.exp(-dt * 0.9));
+  S.wind += (S.windTarget - S.wind) * (1 - Math.exp(-dt * (0.9 + 0.6 * gust)));
 
   // sway
-  let wobT = clamp(0.06 + S.inst * 0.5 + Math.abs(S.wind) * 0.045, 0, 0.8);
+  let wobT = clamp(0.06 + HARD.sway * smooth(HARD.swayFrom, 330, topY) + S.inst * 0.5 + Math.abs(S.wind) * 0.045, 0, 0.9);
   if (REDUCED) wobT *= 0.4;
   S.wobA += (wobT - S.wobA) * (1 - Math.exp(-dt * 1.5));
 
@@ -1719,7 +1727,9 @@ function update(dt){
   const cur = S.cur;
   if (cur){
     if (cur.state === 'hold'){
-      const R = sliderRange(), v = S.mode === 'title' ? MAC_W * 0.9 : speedFor(n);
+      const R = sliderRange();
+      let v = S.mode === 'title' ? MAC_W * 0.9 : speedFor(n);
+      if (S.mode !== 'title'){ const a = pulseFor(n); if (a > 0) v *= 1 + a * Math.sin((S.t - cur.born) * 5.2 + (cur.ph || 0)); }   // uneven tongs
       cur.x += cur.dir * v * dt;
       const lo = S.camX - R, hi = S.camX + R;
       if (cur.x > hi){ cur.x = hi - (cur.x - hi); cur.dir = -1; }
@@ -2454,7 +2464,7 @@ if (hot && typeof hot.snapshot === 'function'){
   } catch (e) {}
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (NEAR) buildNear(); fitIntro(); });
-window.MacaronEiffel = { state: S, drop, newGame };
+window.MacaronEiffel = { state: S, drop, newGame, hard: HARD };
 hot && typeof hot.ready === 'function' ? hot.ready(boot) : boot((hot && hot.data) || {});
 })();
 </script>
