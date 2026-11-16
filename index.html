@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 에펠탑 쌓기">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611161519">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611161612">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -423,7 +423,7 @@ kbd:first-child{margin-left:0}
         <li><b>정중앙에 놓기</b>딱 맞으면 PERFECT예요. 5번 연속 성공하면 잃은 기회를 하나 돌려받아요.</li>
         <li><b>균형 잡기</b>한쪽으로 계속 밀리면 탑이 기울어 윗부분이 통째로 떨어져요.</li>
         <li><b>60m부터 바람</b>떨어지는 마카롱을 옆으로 밀어요. 바람 방향을 보고 미리 맞추세요.</li>
-        <li><b>갈수록 어렵게</b>높이 올라갈수록 집게가 빨라지고, 바람이 세지고, 탑이 더 흔들려요.</li>
+        <li><b>갈수록 어렵게</b>높이 올라갈수록 집게가 빨라지고 바람이 세져요. 비켜 놓으면 마카롱이 까딱거리고 탑이 출렁여서 더 쉽게 무너져요.</li>
         <li><b>기회 3번</b>마카롱을 놓치거나 탑이 무너질 때마다 하나씩 줄어요.</li>
       </ul>
     </details>
@@ -650,7 +650,7 @@ let W = 0, H = 0, dpr = 1, ppm = 10, macPx = 80, macHpx = 36, focusY = 0, eiffel
 const S = {
   mode: 'title', stack: [], lives: 3, combo: 0, maxCombo: 0, perfects: 0, endless: false,
   cur: null, ghost: null, groups: [], parts: [], texts: [], streaks: [],
-  camH: 0, camX: 0, shake: 0, t: 0, wind: 0, windTarget: 0, windNext: 0, wobA: 0.06, inst: 0,
+  camH: 0, camX: 0, shake: 0, t: 0, wind: 0, windTarget: 0, windNext: 0, wobA: 0.06, inst: 0, kx: 0, kv: 0,
   nextAt: -1, endAt: -1, peak: 0, peakN: 0, passed: new Set(), lastFlavor: -1, hDisp: 0,
   fwNext: 0, playTime: 0, camInit: false
 };
@@ -1417,7 +1417,7 @@ function analyze(st){
     const com = sum / (n - i);
     let lo, hi;
     if (i === 0){ lo = Math.max(-PLATE_W / 2, st[0].x - MAC_W / 2); hi = Math.min(PLATE_W / 2, st[0].x + MAC_W / 2); }
-    else { const a = st[i].x, b = st[i - 1].x; lo = Math.max(a, b) - MAC_W / 2; hi = Math.min(a, b) + MAC_W / 2; }
+    else { const a = st[i].x, b = st[i - 1].x, cut = gripCut(i); lo = Math.max(a, b) - MAC_W / 2 + cut; hi = Math.min(a, b) + MAC_W / 2 - cut; }   // higher up the edges hold less
     if (hi - lo <= 0.01 || com < lo || com > hi){ fail = i; continue; }
     inst = Math.max(inst, 1 - Math.min(com - lo, hi - com) / (MAC_W / 2));
   }
@@ -1426,8 +1426,14 @@ function analyze(st){
 function wob(y){
   if (y < 12) return 0;
   const f = Math.min(1, (y - 12) / 90);
-  return S.wobA * f * f * Math.sin(S.t * 2.2 - y * 0.05) + S.wind * 0.03 * f;
+  let w = S.wobA * f * f * Math.sin(S.t * 2.2 - y * 0.05) + S.wind * 0.03 * f;
+  if (S.kx){ const g = Math.min(1, (y - 12) / Math.max(20, S.stack.length * MAC_H - 12)); w += S.kx * g * g; }   // the jolt of a landing, strongest at the top
+  return w;
 }
+/* a macaron that lands off centre makes the tower lurch and rocks on the edge below it; from about a third of the way up this gets strong */
+function shaky(i){ return 0.18 + 0.82 * smooth(HARD.shakeFrom, HARD.shakeFull, i); }
+function gripCut(i){ return MAC_W * HARD.grip * smooth(HARD.shakeFrom, GOAL_N, i); }
+function jolt(side, o, n){ S.kv += side * MAC_W * (0.02 + HARD.kick * o) * shaky(n) * KICK_W * (REDUCED ? 0.4 : 1); }
 
 /* ---------- game flow ---------- */
 function setMode(m){ S.mode = m; document.body.dataset.mode = m; }
@@ -1435,7 +1441,9 @@ function sliderRange(){ return clamp(W / 2 / ppm - MAC_W * 0.75, MAC_W * 1.15, M
 /* difficulty: the higher the stack, the harder it gets. Five things grow with the height:
    the tongs move faster (and the gain itself grows), from the tower's second floor they speed up and slow down as they go,
    the wind starts at 60 m, blows harder and turns more often, and the tower sways more. The first 50 m stay as gentle as before. */
-const HARD = { v0: 1.9, v1: 0.021, v2: 0.00019, pulse: 0.34, pulseFrom: 34, pulseFull: 96, windFrom: 60, wind0: 0.8, windTop: 10, gust: 0.45, sway: 0.2, swayFrom: 120 };
+const HARD = { v0: 1.9, v1: 0.021, v2: 0.00016, pulse: 0.3, pulseFrom: 34, pulseFull: 96, windFrom: 60, wind0: 0.8, windTop: 10, gust: 0.45, sway: 0.2, swayFrom: 120,
+  shakeFrom: 22, shakeFull: 40, grip: 0.07, kick: 0.22, rock: 0.4 };
+const KICK_W = 6.5, KICK_Z = 0.12;   // the landing jolt is a damped spring: how fast it swings, how quickly it dies down
 function speedFor(n){ const k = Math.min(n, S.endless ? GOAL_N * 1.1 : GOAL_N); return MAC_W * (HARD.v0 + k * HARD.v1 + k * k * HARD.v2); }
 function pulseFor(n){ return HARD.pulse * smooth(HARD.pulseFrom, HARD.pulseFull, n); }
 function windMax(h){ return h < HARD.windFrom ? 0 : Math.min(S.endless ? HARD.windTop + 2 : HARD.windTop, HARD.wind0 + (h - HARD.windFrom) / (330 - HARD.windFrom) * (HARD.windTop - HARD.wind0)); }
@@ -1448,7 +1456,7 @@ function spawn(){
 }
 function resetRun(){
   Object.assign(S, { stack: [], lives: 3, combo: 0, maxCombo: 0, perfects: 0, endless: false, cur: null, ghost: null, groups: [], parts: [], texts: [], streaks: [],
-    wind: 0, windTarget: 0, windNext: 0, wobA: 0.06, inst: 0, nextAt: -1, endAt: -1, peak: 0, peakN: 0, passed: new Set(), playTime: 0, shake: 0 });
+    wind: 0, windTarget: 0, windNext: 0, wobA: 0.06, inst: 0, kx: 0, kv: 0, nextAt: -1, endAt: -1, peak: 0, peakN: 0, passed: new Set(), playTime: 0, shake: 0 });
 }
 function newGame(){
   const intro = $('pStart');
@@ -1488,6 +1496,7 @@ function land(){
     miss(cnt > 1 ? 'topple' : 'edge', cnt); return;
   }
   S.inst = a.inst;
+  if (!perfect && n) jolt(side, Math.min(0.5, Math.abs(dx) / MAC_W), n);
   success(perfect, m, a);
 }
 function toppleFrom(j){
@@ -1528,6 +1537,7 @@ function miss(kind, count){
   sfx.miss(); vibrate([30, 40, 40]);
   if (kind === 'topple'){
     S.shake = REDUCED ? 0.15 : 0.7; sfx.thud();
+    jolt(Math.random() < 0.5 ? 1 : -1, 0.3, S.stack.length);   // what is left of the tower sways after the fall
     toast('와르르', `마카롱 ${count}개가 떨어졌어요`, '한쪽으로 너무 기울었어요');
   }
   S.inst = analyze(S.stack).inst;
@@ -1722,6 +1732,10 @@ function update(dt){
   let wobT = clamp(0.06 + HARD.sway * smooth(HARD.swayFrom, 330, topY) + S.inst * 0.5 + Math.abs(S.wind) * 0.045, 0, 0.9);
   if (REDUCED) wobT *= 0.4;
   S.wobA += (wobT - S.wobA) * (1 - Math.exp(-dt * 1.5));
+  if (S.kx || S.kv){
+    S.kv += (-KICK_W * KICK_W * S.kx - 2 * KICK_Z * KICK_W * S.kv) * dt; S.kx += S.kv * dt;
+    if (Math.abs(S.kx) < 0.002 && Math.abs(S.kv) < 0.01){ S.kx = 0; S.kv = 0; }
+  }
 
   // the macaron in the tongs
   const cur = S.cur;
@@ -1960,7 +1974,24 @@ function drawTower(){
     let scx = 1, scy = 1;
     const age = S.t - m.land;
     if (age < 0.6){ const q = Math.exp(-age * 8) * Math.cos(age * 26) * 0.17; scy = 1 - q; scx = 1 + q * 0.55; }
-    blitMac(m.c, x, yb, scx, scy);
+    // a macaron resting partly off the one below rocks on that edge: hard at first, then settling. The top one keeps teetering a little
+    let rot = 0, px = 0;
+    if (i > 0){
+      const off = (m.x - S.stack[i - 1].x) / MAC_W, o = Math.abs(off);
+      if (o > 0.03){
+        let amp = 0;
+        if (age < 3.2){
+          let env = Math.exp(-age * 1.6) * Math.abs(Math.sin(age * 10.5));
+          if (i < n - 1) env *= Math.exp(-Math.max(0, S.t - S.stack[i + 1].land) * 9);   // the next macaron pins it down
+          amp = (0.05 + HARD.rock * o) * env;
+        }
+        if (i === n - 1 && o > 0.14) amp += 0.1 * o * (0.5 + 0.5 * Math.sin(S.t * 2.7 + i));
+        rot = (off > 0 ? 1 : -1) * amp * shaky(i) * (REDUCED ? 0.3 : 1);
+        px = (off > 0 ? 1 : -1) * (0.5 - Math.min(0.5, o)) * macPx;
+      }
+    }
+    if (rot > 0.002 || rot < -0.002){ ctx.save(); ctx.translate(x + px, yb); ctx.rotate(rot); blitMac(m.c, -px, 0, scx, scy); ctx.restore(); }
+    else blitMac(m.c, x, yb, scx, scy);
   }
 }
 function drawGroups(){
