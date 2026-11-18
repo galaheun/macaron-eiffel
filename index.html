@@ -9,19 +9,26 @@
 <meta property="og:title" content="마카롱 에펠탑 쌓기">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611181421">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611182338">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" as="image" href="brand-logo-1.png?v=c58f2ffd">
 <link rel="preload" as="image" href="brand-logo.png?v=a0b7ca9d">
+<link rel="preload" as="image" href="brand-title.png?v=67e4cb29">
+<link rel="preload" as="image" href="brand-tagline.png?v=c6e39bae">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
 <title>마카롱 에펠탑 쌓기</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Hahmlet:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
+/* 영문과 숫자는 Futura Bold (2026-11-18 사용자 지정). Futura Std 파일은 상용 글꼴이라 올리지 않는다:
+   아이폰과 맥은 기기에 든 Futura Bold, 그 밖의 기기(안드로이드 등)는 같은 모양을 따른 무료 글꼴 Jost Bold.
+   Gala Futura 는 글자와 숫자만(한글 문장 속 문장 부호와 띄어쓰기는 한글 글꼴 그대로), Gala Futura Full 은 영문 전용 자리용 */
+@font-face{font-family:"Gala Futura";font-weight:100 900;font-style:normal;font-display:swap;src:local("Futura-Bold"),local("Futura Bold"),url(https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7mxEIjVBNIgun_HKOEo.woff2) format("woff2");unicode-range:U+0030-0039,U+0041-005A,U+0061-007A,U+00C0-00D6,U+00D8-00F6,U+00F8-00FF,U+0152-0153}
+@font-face{font-family:"Gala Futura Full";font-weight:100 900;font-style:normal;font-display:swap;src:local("Futura-Bold"),local("Futura Bold"),url(https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7mxEIjVBNIgun_HKOEo.woff2) format("woff2");unicode-range:U+0020-007E,U+00A0-00FF,U+0152-0153,U+2013-2014,U+2018-2019,U+201C-201D,U+2026}
 /* Layout: one full-bleed canvas (a Paris square that climbs into the night sky) under a floating pâtisserie-label HUD; dialogs are gilded box labels */
 :root{
   /* the brand's graphic-charter colours */
@@ -49,10 +56,10 @@
   --lux-mute:#8a7273;
   --hair:rgba(190,147,115,.42);
   --hair-strong:rgba(179,147,122,.95);
-  --f-lux:"Hahmlet","Gowun Batang","AppleMyungjo",serif;
-  --f-display:"Gowun Batang","Nanum Myeongjo","AppleMyungjo",serif;
-  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --f-num:"Bodoni Moda","Bodoni 72",Didot,Georgia,serif;
+  --f-lux:"Gala Futura","Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-display:"Gala Futura","Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"Gala Futura","Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-num:"Gala Futura Full",Futura,"Century Gothic","Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -68,13 +75,13 @@ body[data-mode="title"] .ui{opacity:0}
 .hud-left{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}
 .alt-card{background:var(--glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:18px;padding:9px 15px 9px;box-shadow:0 8px 22px -10px rgba(40,18,40,.35),inset 0 0 0 1px rgba(190,147,115,.4)}
 .alt{display:flex;align-items:baseline;gap:3px;font-family:var(--f-num);font-weight:600;font-size:clamp(32px,8.6vw,44px);line-height:1;font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.01em}
-.alt .u{font-size:.5em;font-style:italic;font-weight:500}
+.alt .u{font-size:.5em;font-weight:500}
 .alt .goal{font-size:.38em;font-weight:400;color:var(--ink-soft);margin-left:6px}
 .sub{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:5px;font-size:12.5px;color:var(--ink-soft)}
 .sub span:last-child{color:var(--ink)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 11px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:12.5px;box-shadow:0 6px 16px -10px rgba(40,18,40,.4)}
-.chip b{font-family:var(--f-num);font-style:italic;font-size:16px;line-height:1}
+.chip b{font-family:var(--f-num);font-size:16px;line-height:1}
 .chip.combo{background:linear-gradient(180deg,#f6eecb,var(--c-cream));color:var(--c-choc);box-shadow:0 6px 16px -8px rgba(108,54,42,.45),inset 0 0 0 1px rgba(190,147,115,.6)}
 .chip.wind svg{width:16px;height:12px;transition:transform .3s}
 .chip.wind[data-dir="l"] svg{transform:scaleX(-1)}
@@ -105,7 +112,7 @@ body[data-mode="title"] .ui{opacity:0}
 /* milestone toast */
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 21%);transform:translate(-50%,-14px) scale(.96);opacity:0;transition:opacity .35s ease,transform .5s cubic-bezier(.2,1.4,.4,1);display:flex;flex-direction:column;align-items:center;gap:3px;max-width:calc(100% - 32px);padding:12px 24px 13px;text-align:center;border-radius:18px;background:var(--cream);box-shadow:0 20px 40px -18px rgba(30,10,30,.55),inset 0 0 0 1px rgba(190,147,115,.6),inset 0 0 0 5px var(--cream),inset 0 0 0 6px rgba(190,147,115,.32)}
 .toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
-.toast .t-eye{font-family:var(--f-num);font-style:italic;font-size:14px;color:var(--gold-ink)}
+.toast .t-eye{font-family:var(--f-num);font-size:14px;color:var(--gold-ink)}
 .toast strong{font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1.2;text-wrap:balance}
 .toast .t-sub{font-size:12.5px;color:var(--ink-soft);text-wrap:balance}
 
@@ -117,8 +124,8 @@ body[data-mode="title"] .ui{opacity:0}
 .lux-card{width:100%;max-width:380px;margin:auto;padding:34px 26px 26px;border-radius:2px;background:var(--ivory);color:var(--lux-ink);text-align:center;box-shadow:0 44px 90px -34px rgba(0,0,0,.6);animation:rise .6s cubic-bezier(.2,.8,.25,1)}
 .lux-mark{margin:0;padding-left:.4em;font-family:var(--f-num);font-weight:500;font-size:11px;letter-spacing:.4em;text-transform:uppercase}
 .lux-big{display:flex;justify-content:center;align-items:baseline;gap:6px;margin:22px 0 2px;font-family:var(--f-num);font-weight:400;font-size:clamp(58px,17vw,76px);line-height:1;letter-spacing:-.01em;font-variant-numeric:lining-nums}
-.lux-big small{font-size:.34em;font-style:italic}
-.lux-card h2{margin:12px 0 8px;font-family:var(--f-lux);font-weight:300;font-size:24px;line-height:1.3;letter-spacing:.03em;text-wrap:balance}
+.lux-big small{font-size:.34em}
+.lux-card h2{margin:12px 0 8px;font-family:var(--f-lux);font-weight:600;font-size:24px;line-height:1.3;letter-spacing:.03em;text-wrap:balance}
 .lux-sub{margin:0 auto;max-width:30ch;font-size:14px;line-height:1.7;color:var(--lux-mute);text-wrap:balance}
 .lux-card .facts{margin:22px 0 0}
 .lux-note{margin:14px auto 22px;max-width:32ch;font-size:12.5px;line-height:1.7;color:var(--lux-mute);text-wrap:balance}
@@ -161,18 +168,18 @@ kbd:first-child{margin-left:0}
 .hero-shadow{width:calc(var(--mac-w,170px) * 1.08);height:16px;margin-top:-9px;border-radius:50%;background:radial-gradient(closest-side,rgba(40,24,30,.2),rgba(40,24,30,0))}
 .hero-tower{display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:7px}
 .tower-label{display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;animation:fadeIn .7s 1.9s both}
-.tower-label b{font-family:var(--f-num);font-weight:400;font-style:italic;font-size:16px;line-height:1}
+.tower-label b{font-family:var(--f-num);font-weight:400;font-size:16px;line-height:1}
 .tower-label i{padding-left:.3em;font-family:var(--f-num);font-style:normal;font-size:8.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--lux-mute)}
 .eiffel{display:block;height:calc(var(--stack-h,230px) * 1.42);width:calc(var(--stack-h,230px) * 0.44);overflow:visible}
 .eiffel .ln{fill:none;stroke:var(--lux-ink);stroke-width:1;stroke-linecap:round;stroke-linejoin:round;animation:draw 1.8s .35s cubic-bezier(.45,.05,.25,1) both}
 .eiffel .ln.thin{stroke-width:.75}
 .eiffel .lat{fill:none;stroke:var(--lux-ink);stroke-width:.6;stroke-opacity:.32;animation:fadeIn 1s 1.5s both}
-.intro h1{margin:clamp(14px,2.6vh,30px) 0 10px;font-family:var(--f-lux);font-weight:300;font-size:clamp(30px,8.4vw,38px);line-height:1.15;letter-spacing:.04em;text-wrap:balance}
+.intro h1{margin:clamp(14px,2.6vh,30px) 0 10px;font-family:var(--f-lux);font-weight:600;font-size:clamp(30px,8.4vw,38px);line-height:1.15;letter-spacing:.04em;text-wrap:balance}
 .intro-sub{margin:0;max-width:30ch;font-size:14px;line-height:1.7;color:var(--lux-mute);text-wrap:balance}
 .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;margin:clamp(18px,3.2vh,32px) 0;padding:16px 0 14px;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
 .facts div{display:flex;flex-direction:column-reverse;align-items:center;gap:7px;min-width:0}
 .facts dd{margin:0;font-family:var(--f-num);font-weight:400;font-size:30px;line-height:1;font-variant-numeric:lining-nums}
-.facts dd small{margin-left:2px;font-size:.5em;font-style:italic}
+.facts dd small{margin-left:2px;font-size:.5em}
 .facts dt{font-size:11px;letter-spacing:.08em;color:var(--lux-mute)}
 .btn-lux{pointer-events:auto;width:100%;max-width:320px;min-height:54px;padding-left:.34em;border:0;border-radius:0;background:var(--lux-ink);color:var(--ivory);font-family:var(--f-lux);font-weight:500;font-size:15px;letter-spacing:.34em;cursor:pointer;transition:background .25s ease,letter-spacing .4s ease}
 .btn-lux:hover{background:var(--c-choc);letter-spacing:.42em}
@@ -261,13 +268,13 @@ kbd:first-child{margin-left:0}
 .sp-rule::before,.sp-rule::after{content:"";flex:1;height:1px;background:currentColor;opacity:.7}
 .sp-rule svg{width:15px;height:15px;stroke:currentColor;stroke-width:1;fill:none;stroke-linecap:round}
 .sp-title{display:flex;flex-direction:column;align-items:center;margin:0;padding:0 .1em;font-family:var(--f-num);font-weight:400;line-height:1;white-space:nowrap;background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sp-title span:first-child{padding:0 .1em .16em;font-style:italic;font-size:clamp(42px,13vw,64px);letter-spacing:.005em}
+.sp-title span:first-child{padding:0 .1em .16em;font-size:clamp(42px,13vw,64px);letter-spacing:.005em}
 .sp-title span + span{margin-top:.5em;padding-left:.44em;font-size:clamp(14px,4.3vw,21px);letter-spacing:.44em;text-transform:uppercase}
-.sp-tag{margin:clamp(18px,3vh,28px) 0 0;font-family:var(--f-num);font-style:italic;font-weight:400;font-size:16px;letter-spacing:.03em;color:#f5e9cf}
+.sp-tag{margin:clamp(18px,3vh,28px) 0 0;font-family:var(--f-num);font-weight:400;font-size:16px;letter-spacing:.03em;color:#f5e9cf}
 .sp-timg{width:min(77.5vw,382px);aspect-ratio:var(--ar);background:linear-gradient(180deg,#fae8ba,#cca462);-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat}
 .sp-tagimg{width:min(58vw,224px);aspect-ratio:var(--ar);margin-top:clamp(20px,3.4vh,32px);background:#f5e9cf;-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat}
 .sp-eye{margin:0 0 clamp(18px,3.2vh,30px);padding-left:.38em;font-family:var(--f-num);font-weight:400;font-size:12px;letter-spacing:.38em;text-transform:uppercase;color:#e2c180}
-.sp-line{margin:0;font-family:var(--f-lux);font-weight:300;font-size:clamp(17px,5.3vw,25px);line-height:1.8;letter-spacing:.01em;color:#f8eed8}
+.sp-line{margin:0;font-family:var(--f-lux);font-weight:500;font-size:clamp(17px,5.3vw,25px);line-height:1.8;letter-spacing:.01em;color:#f8eed8}
 .sp-line span{display:block}
 .sp-line b{font-weight:400;color:#f3d79a}
 .sp-macs{display:flex;justify-content:center;align-items:flex-end;gap:10px;margin:0 0 clamp(20px,3.6vh,34px)}
@@ -296,7 +303,7 @@ kbd:first-child{margin-left:0}
 .story-sec .lux-mark{padding-left:0;margin-bottom:8px;font-size:10px;color:var(--lux-mute)}
 .story-sec h3{margin:0 0 6px;font-family:var(--f-lux);font-weight:500;font-size:16px;letter-spacing:.02em}
 .story-sec p{margin:0;font-size:13.5px;line-height:1.75;color:#5a4549;text-wrap:pretty}
-.story-close{margin:22px 0 18px;text-align:center;font-family:var(--f-lux);font-weight:300;font-size:17px;line-height:1.6;text-wrap:balance}
+.story-close{margin:22px 0 18px;text-align:center;font-family:var(--f-lux);font-weight:500;font-size:17px;line-height:1.6;text-wrap:balance}
 .story-card .lux-link{display:flex;margin:12px auto 0}
 @keyframes settle{from{opacity:0;transform:translateY(-26px)}}
 @keyframes draw{from{stroke-dashoffset:1}}
@@ -351,7 +358,7 @@ kbd:first-child{margin-left:0}
   <div class="toast" id="toast" role="status" aria-live="polite"><span class="t-eye" id="tEye"></span><strong id="tName"></strong><span class="t-sub" id="tSub"></span></div>
 </div>
 
-<section class="splash" id="pSplash" aria-label="PARK HYATT BUSAN, PIERRE HERMÉ PARIS. Christmas Winter Lounge" data-after="#fdfbf8" data-font="italic 400 40px &quot;Bodoni Moda&quot;">
+<section class="splash" id="pSplash" aria-label="PARK HYATT BUSAN, PIERRE HERMÉ PARIS. Christmas Winter Lounge" data-after="#fdfbf8">
   <div class="sp-snow" aria-hidden="true"></div>
   <div class="sp-frame" aria-hidden="true"></div>
   <div class="sp-scene sp-title-scene" data-ms="4600">
@@ -360,8 +367,8 @@ kbd:first-child{margin-left:0}
       <p class="sp-x sp-a" style="--i:1" aria-hidden="true">×</p>
       <div class="sp-logo sp-a" role="img" aria-label="PIERRE HERMÉ PARIS" data-src="brand-logo.png?v=a0b7ca9d" style="--i:2;--ar:1400/248;--src:url(brand-logo.png?v=a0b7ca9d);--k:0.78"></div>
       <div class="sp-rule sp-a" style="--i:3" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1v14M1.9 4.5l12.2 7M14.1 4.5l-12.2 7M8 3.4L6.6 2M8 3.4L9.4 2M8 12.6L6.6 14M8 12.6L9.4 14"/></svg></div>
-      <p class="sp-title sp-a" style="--i:4"><span>Christmas</span><span>Winter Lounge</span></p>
-      <p class="sp-tag sp-a" style="--i:5">Sweet Moments, Brighter Winter</p>
+      <div class="sp-timg sp-a" role="img" aria-label="Christmas Winter Lounge" data-src="brand-title.png?v=67e4cb29" style="--i:4;--ar:1600/307;--src:url(brand-title.png?v=67e4cb29)"></div>
+      <div class="sp-tagimg sp-a" role="img" aria-label="Sweet Moments, Brighter Winter" data-src="brand-tagline.png?v=c6e39bae" style="--i:5;--ar:1400/84;--src:url(brand-tagline.png?v=c6e39bae)"></div>
     </div>
   </div>
   <div class="sp-scene" data-ms="4800">
@@ -1058,7 +1065,7 @@ let NEAR = null;
 function deviceText(g, str, x, y, size, color){
   const m = g.getTransform(), p = m.transformPoint(new DOMPoint(x, y));
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
-  g.font = `600 ${size * Math.abs(m.d)}px "Bodoni Moda", Didot, Georgia, serif`;
+  g.font = `700 ${size * Math.abs(m.d)}px "Gala Futura Full", Futura, sans-serif`;
   g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   g.fillText(str, p.x, p.y); g.restore();
 }
@@ -2049,7 +2056,7 @@ function drawCurrent(dark){
     const age = S.t - cur.born, pop = age < 0.22 ? 1 - Math.pow(1 - age / 0.22, 3) * 0.6 : 1;
     blitMac(cur.c, x, yb, pop, pop);
     drawTongs(x, yb, Math.min(1, pop), 0);
-    ctx.font = 'italic 500 12px "Bodoni Moda", Didot, Georgia, serif';
+    ctx.font = '700 12px "Gala Futura Full", Futura, sans-serif';
     ctx.fillStyle = dark > 0.5 ? 'rgba(255,244,230,.85)' : 'rgba(69,48,53,.78)';
     ctx.textAlign = 'left'; ctx.fillText(FLAVORS[cur.c].fr, x + 8, yb - macHpx * 2.6);
   } else blitMac(cur.c, x, yb);
@@ -2068,13 +2075,13 @@ function drawTexts(dark){
     const age = S.t - t.t0, a = 1 - smooth(0.7, 1.2, age), x = sx(t.x), y = sy(t.y) - age * 30, sc = 1 + 0.3 * Math.exp(-age * 12);
     ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(sc, sc);
     if (t.kind === 'gold'){
-      ctx.font = 'italic 700 26px "Bodoni Moda", Didot, Georgia, serif';
+      ctx.font = '700 26px "Gala Futura Full", Futura, sans-serif';
       ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(69,48,53,.55)'; ctx.strokeText(t.a, 0, 0);
       const gr = ctx.createLinearGradient(0, -22, 0, 4); gr.addColorStop(0, '#f8ec55'); gr.addColorStop(1, '#ff9c1b');
       ctx.fillStyle = gr; ctx.fillText(t.a, 0, 0);
-      if (t.b){ ctx.font = 'italic 600 18px "Bodoni Moda", Didot, Georgia, serif'; ctx.fillStyle = dark > 0.5 ? '#fff3dc' : '#6c362a'; ctx.fillText(t.b, 0, 20); }
+      if (t.b){ ctx.font = '700 18px "Gala Futura Full", Futura, sans-serif'; ctx.fillStyle = dark > 0.5 ? '#fff3dc' : '#6c362a'; ctx.fillText(t.b, 0, 20); }
     } else {
-      ctx.font = '700 18px "Gowun Batang", serif';
+      ctx.font = '700 18px "Gala Futura", "Pretendard Variable", Pretendard, sans-serif';
       ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,248,241,.85)'; ctx.strokeText(t.a, 0, 0);
       ctx.fillStyle = '#de281b'; ctx.fillText(t.a, 0, 0);
     }
@@ -2494,7 +2501,7 @@ if (hot && typeof hot.snapshot === 'function'){
     }));
   } catch (e) {}
 }
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (NEAR) buildNear(); fitIntro(); });
+if (document.fonts && document.fonts.ready) Promise.all([document.fonts.ready, document.fonts.load('700 20px "Gala Futura Full"', 'A0').catch(() => {})]).then(() => { if (NEAR) buildNear(); fitIntro(); });   // 거리 간판 글자도 Futura 로 다시 그린다
 window.MacaronEiffel = { state: S, drop, newGame, hard: HARD };
 hot && typeof hot.ready === 'function' ? hot.ready(boot) : boot((hot && hot.data) || {});
 })();
