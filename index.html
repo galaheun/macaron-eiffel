@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 에펠탑 쌓기">
 <meta property="og:description" content="탭 한 번에 마카롱을 하나씩 쌓아 330m 에펠탑 꼭대기까지 올라가는 쌓기 게임">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611161612">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611181421">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -1441,7 +1441,7 @@ function sliderRange(){ return clamp(W / 2 / ppm - MAC_W * 0.75, MAC_W * 1.15, M
 /* difficulty: the higher the stack, the harder it gets. Five things grow with the height:
    the tongs move faster (and the gain itself grows), from the tower's second floor they speed up and slow down as they go,
    the wind starts at 60 m, blows harder and turns more often, and the tower sways more. The first 50 m stay as gentle as before. */
-const HARD = { v0: 1.9, v1: 0.021, v2: 0.00016, pulse: 0.3, pulseFrom: 34, pulseFull: 96, windFrom: 60, wind0: 0.8, windTop: 10, gust: 0.45, sway: 0.2, swayFrom: 120,
+const HARD = { v0: 1.9, v1: 0.024, v2: 0.00027, pulse: 0.3, pulseFrom: 34, pulseFull: 96, windFrom: 60, wind0: 0.8, windTop: 10, gust: 0.45, sway: 0.2, swayFrom: 120,
   shakeFrom: 22, shakeFull: 40, grip: 0.07, kick: 0.22, rock: 0.4 };
 const KICK_W = 6.5, KICK_Z = 0.12;   // the landing jolt is a damped spring: how fast it swings, how quickly it dies down
 function speedFor(n){ const k = Math.min(n, S.endless ? GOAL_N * 1.1 : GOAL_N); return MAC_W * (HARD.v0 + k * HARD.v1 + k * k * HARD.v2); }
