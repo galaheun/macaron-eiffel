@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <title>마카롱 타워 챌린지 응모 명단</title>
 <style>
-/* 운영자 전용 화면: 응모 명단 보기, 엑셀용 파일 받기, 기록 순위로 당첨자 정하기, 무작위 추첨, 당첨 표시. 이 컴퓨터에서 파일로 열어도 되고, 사이트의 /raffle-admin 으로도 열린다(명단은 토큰이 맞아야 서버가 준다) */
+/* 운영자 전용 화면: 응모 명단 보기, 엑셀용 파일 받기, 날짜별 현황, 기록 순위로 당첨자 정하기, 무작위 추첨, 당첨 표시. 이 컴퓨터에서 파일로 열어도 되고, 사이트의 /raffle-admin 으로도 열린다(명단은 토큰이 맞아야 서버가 준다) */
 :root{--paper:#fbf8f3;--card:#fff;--ink:#171315;--mute:#7b7073;--hair:rgba(23,19,21,.14);--hair2:rgba(23,19,21,.38);--gold:#94722b;--wash:rgba(195,154,69,.12);--bad:#b0304f;--ok:#2f6b4f}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -38,6 +38,7 @@ label.f.wide{margin:12px 0}
 .tag{display:inline-block;margin-right:5px;padding:1px 7px;border:1px solid var(--hair2);font-size:11.5px;color:var(--mute)}
 .tag.warn{border-color:var(--bad);color:var(--bad)}
 tr.spare td{color:var(--mute)}
+tfoot th{position:static;background:#f4efe7;font-size:13px;font-weight:600;color:var(--ink);border-bottom:0}
 .warnlist{margin:0 0 12px;padding:0;list-style:none;font-size:12.5px;line-height:1.6;color:var(--bad)}
 .msg.err{color:var(--bad)}
 .msg.ok{color:var(--ok)}
@@ -86,6 +87,20 @@ tr.win td{background:var(--wash)}
     <div class="tile"><b id="tWin">0</b><span>당첨으로 표시한 분</span></div>
     <div class="tile"><b id="tLast">없음</b><span>가장 최근 응모</span></div>
   </div>
+
+  <section class="card" id="statCard" hidden>
+    <h2>날짜별 현황</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>날짜</th><th class="num">게임한 기기</th><th class="num">끝난 판</th><th class="num">330m 달성 기기</th><th class="num">랭킹 등록 기기</th><th class="num">새 응모</th><th class="num">누적 응모</th></tr></thead>
+        <tbody id="stRows"></tbody>
+        <tfoot id="stFoot"></tfoot>
+      </table>
+      <div class="empty" id="stEmpty" hidden>아직 집계된 날이 없어요.</div>
+    </div>
+    <div class="row noprint" style="margin-top:10px"><button type="button" id="btnStatCsv">날짜별 현황 CSV 받기</button></div>
+    <p class="note" id="stNote"></p>
+  </section>
 
   <section class="card noprint" id="rankCard" hidden>
     <h2>순위로 당첨자 정하기</h2>
@@ -224,8 +239,9 @@ async function load(quiet){
     try { sessionStorage.setItem('raffleAdminToken', t); } catch (e) {}
     ROWS = r.rows || [];
     say('loadMsg', `${fmtFull(new Date().toISOString())} 기준 ${ROWS.length}명을 불러왔어요.`, 'ok');
-    ['tiles', 'rankCard', 'drawCard', 'listSec'].forEach(id => { $(id).hidden = false; });
+    ['tiles', 'statCard', 'rankCard', 'drawCard', 'listSec'].forEach(id => { $(id).hidden = false; });
     render();
+    loadStats();
     return true;
   } catch (e) { say('loadMsg', failText(e), 'err'); return false; }
 }
@@ -298,6 +314,59 @@ async function saveWinners(){
     await load(true);
   } catch (e) { say('drawMsg', failText(e), 'err'); }
   finally { $('btnSaveWin').disabled = false; }
+}
+
+/* ---------- 날짜별 현황 ---------- */
+// 서버 함수 macaron_stats(stats-schema.sql)가 판 수, 랭킹 등록, 응모를 한국 날짜로 묶어 준다. 그 함수가 아직 없는 서버면 불러온 명단으로 응모만 센다
+let STATS = null;
+const kstDate = iso => { const t = new Date(iso).getTime(); return isNaN(t) ? '' : new Date(t + 9 * 3600e3).toISOString().slice(0, 10); };
+const dayLabel = d => `${+d.slice(5, 7)}/${+d.slice(8, 10)} (${'일월화수목금토'[new Date(d + 'T03:00:00Z').getUTCDay()]})`;
+function statDays(){
+  if (STATS) return { days: STATS, full: true };
+  const m = {};
+  for (const r of ROWS){
+    const d = kstDate(r.at); if (!d) continue;
+    const x = m[d] || (m[d] = { day: d, counted: false, entries: 0, entries_top: 0 });
+    x.entries++; if (+r.height >= 330) x.entries_top++;
+  }
+  return { days: Object.keys(m).sort().map(d => m[d]), full: false };
+}
+function renderStats(){
+  const { days, full } = statDays(), num = v => v == null ? '-' : (+v).toLocaleString('ko-KR');
+  const sum = { players: 0, plays: 0, top_players: 0, rank_players: 0, entries: 0 };
+  let cum = 0, anyCount = false, gap = false;
+  $('stRows').innerHTML = days.map(d => {
+    cum += +d.entries || 0;
+    if (d.counted){ anyCount = true; sum.players += +d.players || 0; sum.plays += +d.plays || 0; sum.top_players += +d.top_players || 0; } else gap = true;
+    sum.rank_players += +d.rank_players || 0; sum.entries += +d.entries || 0;
+    return `<tr><td>${esc(dayLabel(d.day))}</td><td class="num">${d.counted ? num(d.players) : '-'}</td><td class="num">${d.counted ? num(d.plays) : '-'}</td><td class="num">${d.counted ? num(d.top_players) : '-'}</td>
+      <td class="num">${full ? num(d.rank_players) : '-'}</td><td class="num">${num(d.entries)}</td><td class="num">${num(cum)}</td></tr>`;
+  }).join('');
+  $('stFoot').innerHTML = days.length ? `<tr><th>합계</th><th class="num">${anyCount ? num(sum.players) : '-'}</th><th class="num">${anyCount ? num(sum.plays) : '-'}</th><th class="num">${anyCount ? num(sum.top_players) : '-'}</th>
+    <th class="num">${full ? num(sum.rank_players) : '-'}</th><th class="num">${num(sum.entries)}</th><th class="num"></th></tr>` : '';
+  $('stEmpty').hidden = days.length > 0;
+  $('stNote').textContent = (full
+    ? '게임한 기기, 끝난 판, 330m 달성 기기는 게임이 한 판 끝날 때마다 숫자만 올린 값이에요(누가 했는지는 저장하지 않아요). 합계의 기기 수는 날마다 센 값을 더한 것이라 여러 날 온 분은 날 수만큼 들어가요.'
+      + (gap ? ' 판 수를 세기 전 날짜는 - 로 보여요.' : '')
+    : '서버에 날짜별 집계 함수가 아직 없어서, 불러온 명단으로 응모만 셌어요.')
+    + ' 랭킹 등록 기기는 그날 닉네임을 올린 기기, 새 응모는 그날 처음 성함과 연락처를 남긴 분이에요. 날짜는 한국 시간 기준이에요.';
+}
+async function loadStats(){
+  STATS = null; renderStats();
+  try { const r = await rpc('macaron_stats', { p_token: TOKEN }); if (r && r.ok && Array.isArray(r.days)){ STATS = r.days; renderStats(); } } catch (e) {}
+}
+function statCsv(){
+  const { days, full } = statDays(), v = (d, k) => d.counted && d[k] != null ? d[k] : '';
+  let cum = 0;
+  const head = ['날짜', '게임한 기기', '끝난 판', '330m 달성 판', '330m 달성 기기', '랭킹 등록 기기', '랭킹 등록 횟수', '랭킹 최고(m)', '새 응모', '그중 330m 이상', '누적 응모'];
+  const lines = [head.join(',')].concat(days.map(d => { cum += +d.entries || 0; return [d.day, v(d, 'players'), v(d, 'plays'), v(d, 'top_plays'), v(d, 'top_players'),
+    full ? d.rank_players : '', full ? d.rank_rows : '', full && d.rank_best != null ? d.rank_best : '', d.entries || 0, d.entries_top || 0, cum].join(','); }));
+  const t = new Date(), a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = `macaron-daily-${t.getFullYear()}${pad(t.getMonth() + 1)}${pad(t.getDate())}-${pad(t.getHours())}${pad(t.getMinutes())}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  window.__lastStatCsv = lines.join('\n');
 }
 
 /* ---------- 순위로 당첨자 정하기 ---------- */
@@ -428,14 +497,15 @@ $('fLoad').addEventListener('submit', e => { e.preventDefault(); load(false); })
 $('btnReload').addEventListener('click', () => load(false));
 $('btnForget').addEventListener('click', () => {
   try { sessionStorage.removeItem('raffleAdminToken'); } catch (e) {}
-  $('token').value = ''; TOKEN = ''; ROWS = []; PICK = null; RANKED = null;
-  ['tiles', 'rankCard', 'drawCard', 'listSec', 'rankResult', 'drawResult'].forEach(id => { $(id).hidden = true; });
+  $('token').value = ''; TOKEN = ''; ROWS = []; PICK = null; RANKED = null; STATS = null;
+  ['tiles', 'statCard', 'rankCard', 'drawCard', 'listSec', 'rankResult', 'drawResult'].forEach(id => { $(id).hidden = true; });
   say('loadMsg', '토큰과 화면의 명단을 지웠어요.');
 });
 $('mask').addEventListener('change', render);
 $('q').addEventListener('input', render);
 $('view').addEventListener('change', render);
 $('sort').addEventListener('change', render);
+$('btnStatCsv').addEventListener('click', statCsv);
 $('btnRank').addEventListener('click', rankNow);
 $('btnSaveRank').addEventListener('click', saveRank);
 $('btnDropRank').addEventListener('click', () => { RANKED = null; $('rankResult').hidden = true; say('rankMsg', ''); });

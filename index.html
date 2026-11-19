@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 타워 챌린지">
 <meta property="og:description" content="파크 하얏트 부산과 피에르 에르메의 크리스마스 윈터 라운지 이벤트">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611191247">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611191638">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -1521,6 +1521,7 @@ function resetRun(){
     wind: 0, windTarget: 0, windNext: 0, wobA: 0.06, inst: 0, kx: 0, kv: 0, nextAt: -1, endAt: -1, peak: 0, peakN: 0, passed: new Set(), playTime: 0, shake: 0 });
 }
 function newGame(){
+  playSent = false;
   const intro = $('pStart');
   if (!intro.hidden && !intro.classList.contains('leaving')){
     intro.classList.add('leaving');
@@ -1616,6 +1617,7 @@ function checkMilestones(h){
 }
 function win(){
   setMode('win'); S.fwNext = S.t + 0.25; sfx.win();
+  playPing();
   saveBest(S.peak);
   $('wCombo').textContent = S.maxCombo;
   $('wLives').textContent = S.lives;
@@ -1642,6 +1644,7 @@ function compareText(h){
 }
 function gameOver(){
   setMode('over');
+  playPing();   // a run that went on past the top was already counted when it got there
   const peak = S.peak, best = saveBest(peak), isNew = peak > best && peak > 0;
   $('oH').textContent = fmt(peak);
   $('overTitle').textContent = isNew ? '새 최고 기록이에요!' : '기회를 모두 썼어요';
@@ -2420,6 +2423,19 @@ async function openRank(){
 $('btnRank').addEventListener('click', openRank);
 $('btnRankBack').addEventListener('click', () => showPanel('pStart'));
 $('btnRankPlay').addEventListener('click', () => { audio(); newGame(); });
+/* ---------- daily tally: one anonymous count per finished run (stats-schema.sql). Numbers only: no device id, no nickname ---------- */
+// "first today" is this browser's own memory of the day, so the server can count devices without ever being told who they are
+let playSent = false;
+function playPing(){
+  if (playSent || !rankOn()) return;
+  playSent = true;
+  const day = kstDay(), top = S.peakN >= GOAL_N;
+  let st = null;
+  try { st = JSON.parse(store.get('playDay') || 'null'); } catch (e) {}
+  const same = !!st && st.d === day;
+  store.set('playDay', JSON.stringify({ d: day, top: (same && !!st.top) || top }));
+  rankRpc('macaron_play', { p_macarons: S.peakN, p_secs: Math.round(S.playTime * 10) / 10, p_first: !same, p_first_top: top && !(same && st.top) }).catch(() => {});
+}
 /* ---------- prize draw entry: name and phone, kept by the macaron_enter function next to the ranking (raffle-schema.sql) ---------- */
 // Off when the server (RANK) is empty. publish_web.py fills RAFFLE_SET from raffle-config.json when that file exists.
 const RAFFLE_SET = {"minN": 100, "byRank": true, "until": "2026-12-25"};
