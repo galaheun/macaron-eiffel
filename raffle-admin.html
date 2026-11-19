@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="data:,">
-<title>마카롱 에펠탑 경품 추첨 명단</title>
+<title>마카롱 타워 챌린지 응모 명단</title>
 <style>
-/* 운영자 전용 화면: 응모 명단 보기, 엑셀용 파일 받기, 무작위 추첨, 당첨 표시. 이 컴퓨터에서 파일로 열어도 되고, 사이트의 /raffle-admin 으로도 열린다(명단은 토큰이 맞아야 서버가 준다) */
+/* 운영자 전용 화면: 응모 명단 보기, 엑셀용 파일 받기, 기록 순위로 당첨자 정하기, 무작위 추첨, 당첨 표시. 이 컴퓨터에서 파일로 열어도 되고, 사이트의 /raffle-admin 으로도 열린다(명단은 토큰이 맞아야 서버가 준다) */
 :root{--paper:#fbf8f3;--card:#fff;--ink:#171315;--mute:#7b7073;--hair:rgba(23,19,21,.14);--hair2:rgba(23,19,21,.38);--gold:#94722b;--wash:rgba(195,154,69,.12);--bad:#b0304f;--ok:#2f6b4f}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -31,6 +31,14 @@ button:disabled{opacity:.45;cursor:default}
 .chk{display:inline-flex;align-items:center;gap:7px;height:40px;font-size:13.5px;color:var(--ink);cursor:pointer}
 .chk input{width:17px;height:17px;margin:0;accent-color:var(--ink)}
 .msg{min-height:1.5em;margin:10px 0 0;font-size:13px}
+textarea{display:block;width:100%;padding:9px 11px;border:1px solid var(--hair2);border-radius:0;background:#fff;color:var(--ink);font:inherit;font-size:13.5px;line-height:1.75;resize:vertical}
+textarea:focus{outline:2px solid var(--ink);outline-offset:1px}
+label.f.wide{margin:12px 0}
+.result .tablewrap{margin:0 0 12px}
+.tag{display:inline-block;margin-right:5px;padding:1px 7px;border:1px solid var(--hair2);font-size:11.5px;color:var(--mute)}
+.tag.warn{border-color:var(--bad);color:var(--bad)}
+tr.spare td{color:var(--mute)}
+.warnlist{margin:0 0 12px;padding:0;list-style:none;font-size:12.5px;line-height:1.6;color:var(--bad)}
 .msg.err{color:var(--bad)}
 .msg.ok{color:var(--ok)}
 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}
@@ -58,8 +66,8 @@ tr.win td{background:var(--wash)}
 </head>
 <body>
 <main>
-  <h1>마카롱 에펠탑 경품 추첨 명단</h1>
-  <p class="lede">게임에서 성함과 연락처를 남긴 분들의 명단이에요. 연락처가 들어 있으니 이 화면과 내려받은 파일은 추첨을 맡은 사람만 봐 주세요.</p>
+  <h1>마카롱 타워 챌린지 응모 명단</h1>
+  <p class="lede">게임에서 성함과 연락처를 남긴 분들의 명단이에요. 연락처가 들어 있으니 이 화면과 내려받은 파일은 당첨자 선정을 맡은 사람만 봐 주세요.</p>
 
   <section class="card noprint">
     <h2>명단 불러오기</h2>
@@ -79,8 +87,39 @@ tr.win td{background:var(--wash)}
     <div class="tile"><b id="tLast">없음</b><span>가장 최근 응모</span></div>
   </div>
 
+  <section class="card noprint" id="rankCard" hidden>
+    <h2>순위로 당첨자 정하기</h2>
+    <div class="row">
+      <label class="f">이 기록 이상 (m)<input id="rkMin" type="number" min="0" max="830" step="0.1" value="330"></label>
+      <label class="f">기록한 시각, 이때부터<input id="rkFrom" type="datetime-local" value="2026-11-26T00:00"></label>
+      <label class="f">이때까지<input id="rkTo" type="datetime-local" value="2026-12-25T23:59"></label>
+      <label class="f">예비로 볼 인원<input id="rkSpare" type="number" min="0" max="50" value="5"></label>
+    </div>
+    <label class="f wide">순위별 인원과 경품 (한 줄에 하나씩: 등수 | 인원 | 경품)
+      <textarea id="rkTiers" rows="7" spellcheck="false"></textarea>
+    </label>
+    <div class="row"><button class="pri" type="button" id="btnRank">순위 매기기</button></div>
+    <p class="note">기록이 높은 순서로 세우고, 기록이 같으면 그 기록을 먼저 세운 분이 앞서요. 시각은 한국 시간이고, 비우면 기간을 따지지 않아요. "당첨으로 저장"을 눌러야 명단에 표시돼요.</p>
+    <div class="result" id="rankResult" hidden>
+      <h3 id="rkTitle"></h3>
+      <p id="rkSub"></p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th class="num">순위</th><th>등수</th><th>경품</th><th>성함</th><th>연락처</th><th class="num">기록</th><th>기록한 시각</th><th>참고</th></tr></thead>
+          <tbody id="rkRows"></tbody>
+        </table>
+      </div>
+      <ul class="warnlist" id="rkWarn"></ul>
+      <div class="row">
+        <button class="pri" type="button" id="btnSaveRank">당첨으로 저장</button>
+        <button type="button" id="btnDropRank">결과 닫기</button>
+      </div>
+    </div>
+    <p class="msg" id="rankMsg" role="status"></p>
+  </section>
+
   <section class="card noprint" id="drawCard" hidden>
-    <h2>추첨하기</h2>
+    <h2>무작위로 추첨하기</h2>
     <div class="row">
       <label class="f">추첨 대상
         <select id="dPool">
@@ -116,18 +155,21 @@ tr.win td{background:var(--wash)}
       <label class="f">보기
         <select id="view"><option value="all">전체</option><option value="win">당첨된 분만</option><option value="top">꼭대기까지 쌓은 분만</option></select>
       </label>
+      <label class="f">순서
+        <select id="sort"><option value="at">응모한 순</option><option value="rank">기록 순위 순</option></select>
+      </label>
       <button type="button" id="btnCsv">엑셀용 파일(CSV) 받기</button>
       <button type="button" id="btnReload">새로 고침</button>
       <span class="note" id="listInfo" style="margin:0 0 9px"></span>
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="num">번호</th><th>응모 시각</th><th>성함</th><th>연락처</th><th class="num">기록</th><th class="num">마카롱</th><th class="num">응모 횟수</th><th>들어온 길</th><th>당첨</th><th class="noprint"></th></tr></thead>
+        <thead><tr><th class="num">번호</th><th>응모 시각</th><th>성함</th><th>연락처</th><th class="num">기록</th><th class="num">마카롱</th><th>기록한 시각</th><th class="num">응모 횟수</th><th>들어온 길</th><th>당첨</th><th class="noprint"></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
       <div class="empty" id="empty" hidden>아직 응모한 분이 없어요.</div>
     </div>
-    <p class="note">같은 번호는 한 줄만 있어요. 여러 번 응모하면 가장 높은 기록이 남고 응모 횟수가 올라가요. 기록은 게임이 보낸 값이라 참고용이에요.</p>
+    <p class="note">같은 번호는 한 줄만 있어요. 여러 번 응모하면 가장 높은 기록이 남고 응모 횟수가 올라가요. 기록은 게임이 보낸 값이에요. 기록한 시각은 지금 기록을 세운 때예요.</p>
   </section>
 </main>
 
@@ -143,7 +185,7 @@ const apiParam = new URLSearchParams(location.search).get('api');
 const isLocal = location.protocol === 'file:' || /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
 if (isLocal && apiParam && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(apiParam)){ CFG.url = apiParam; CFG.key = CFG.key || 'test'; }
 
-let ROWS = [], PICK = null, TOKEN = '';
+let ROWS = [], PICK = null, RANKED = null, TOKEN = '';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const masked = () => $('mask').checked;
 const fmtPhone = d => { d = String(d || ''); return d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : d; };
@@ -182,7 +224,7 @@ async function load(quiet){
     try { sessionStorage.setItem('raffleAdminToken', t); } catch (e) {}
     ROWS = r.rows || [];
     say('loadMsg', `${fmtFull(new Date().toISOString())} 기준 ${ROWS.length}명을 불러왔어요.`, 'ok');
-    ['tiles', 'drawCard', 'listSec'].forEach(id => { $(id).hidden = false; });
+    ['tiles', 'rankCard', 'drawCard', 'listSec'].forEach(id => { $(id).hidden = false; });
     render();
     return true;
   } catch (e) { say('loadMsg', failText(e), 'err'); return false; }
@@ -190,8 +232,9 @@ async function load(quiet){
 
 function visibleRows(){
   const q = $('q').value.trim().replace(/-/g, ''), v = $('view').value;
-  return ROWS.filter(r => (v === 'all' || (v === 'win' && r.winner) || (v === 'top' && +r.height >= 330))
+  const list = ROWS.filter(r => (v === 'all' || (v === 'win' && r.winner) || (v === 'top' && +r.height >= 330))
     && (!q || String(r.name).includes(q) || String(r.phone).endsWith(q) || String(r.phone).includes(q)));
+  return $('sort').value === 'rank' ? list.sort(byRank) : list;
 }
 function render(){
   $('tAll').textContent = ROWS.length.toLocaleString('ko-KR');
@@ -201,13 +244,14 @@ function render(){
   const list = visibleRows();
   $('rows').innerHTML = list.map(r => `<tr class="${r.winner ? 'win' : ''}">
     <td class="num">${r.id}</td><td title="${esc(fmtFull(r.at))}">${esc(fmtAt(r.at))}</td><td>${esc(showName(r.name))}</td><td>${esc(showPhone(r.phone))}</td>
-    <td class="num">${esc(fmtH(r.height))}</td><td class="num">${r.macarons}</td><td class="num">${r.tries}</td><td>${esc(r.source || '')}</td>
+    <td class="num">${esc(fmtH(r.height))}</td><td class="num">${r.macarons}</td><td title="${esc(fmtFull(recAt(r)))}">${esc(fmtAt(recAt(r)))}</td><td class="num">${r.tries}</td><td>${esc(r.source || '')}</td>
     <td>${r.winner ? `<span class="badge">당첨</span> ${esc(r.prize || '')}` : ''}</td>
     <td class="noprint">${r.winner ? `<button class="sm" data-act="unwin" data-id="${r.id}">당첨 취소</button> ` : ''}<button class="sm warn" data-act="del" data-id="${r.id}">지우기</button></td></tr>`).join('');
   $('empty').hidden = list.length > 0;
   $('empty').textContent = ROWS.length ? '조건에 맞는 분이 없어요.' : '아직 응모한 분이 없어요.';
   $('listInfo').textContent = list.length === ROWS.length ? `${ROWS.length}명` : `${ROWS.length}명 가운데 ${list.length}명`;
   if (PICK) showPick();
+  if (RANKED) showRank();
 }
 
 /* ---------- 추첨 ---------- */
@@ -256,12 +300,102 @@ async function saveWinners(){
   finally { $('btnSaveWin').disabled = false; }
 }
 
+/* ---------- 순위로 당첨자 정하기 ---------- */
+// 이번 행사(마카롱 타워 챌린지)의 순위별 인원과 경품. 화면에서 고쳐 쓸 수 있다. 경품을 바꾸면 게임 인트로(brand-config.json 의 event)와 함께 고칠 것
+const RANK_TIERS = [
+  '1등 | 1 | 오션뷰 객실 1박 및 2인 조식 숙박권 1매',
+  '2등 | 1 | 다이닝룸 주말 런치 뷔페 2인 식사권 1매',
+  '3등 | 1 | 리빙룸 디너 4코스 2인 식사권 1매',
+  '4등 | 1 | 피에르 에르메 애프터눈 티세트 이용권 1매',
+  '5등 | 1 | 크리스마스 케이크 교환권 1매',
+  '6등 | 1 | 크리스마스 케이크 교환권 1매',
+  '7등 | 20 | 파티세리 테이크아웃 커피 1인 2잔'
+];
+$('rkTiers').value = RANK_TIERS.join('\n');
+const kst = v => v ? Date.parse(v + (v.length === 16 ? ':00' : '') + '+09:00') : null;   // 입력 칸의 시각은 한국 시간으로 읽는다
+// 지금 기록을 세운 시각. 서버가 best_at 을 주면 그 값, 아니면 줄이 마지막으로 고쳐진 시각(기록이 올라갈 때, 그리고 같은 번호로 다시 응모할 때 바뀐다)
+const recAt = r => r.best_at || r.updated || r.at;
+const recMs = r => new Date(recAt(r)).getTime();
+const loose = r => !r.best_at && +r.tries > 1;   // 같은 번호로 다시 응모한 줄: best_at 이 없으면 기록 세운 시각이 실제보다 늦게 잡혔을 수 있다
+const byRank = (a, b) => (+b.height - +a.height) || (recMs(a) - recMs(b)) || (a.id - b.id);
+function fmtSec(iso){ const d = new Date(iso); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function parseTiers(){
+  const out = [];
+  for (const line of $('rkTiers').value.split('\n')){
+    if (!line.trim()) continue;
+    const p = line.split('|').map(s => s.trim()), n = Math.floor(+p[1]);
+    if (p.length < 3 || !p[0] || !p[2] || !(n >= 1) || n > 500) return null;
+    out.push({ name: p[0], count: n, prize: p.slice(2).join(' | ') });
+  }
+  return out.length ? out : null;
+}
+function rankNow(){
+  const tiers = parseTiers();
+  if (!tiers){ say('rankMsg', '순위별 인원과 경품을 "등수 | 인원 | 경품" 모양으로 한 줄에 하나씩 적어 주세요.', 'err'); return; }
+  const min = parseFloat($('rkMin').value) || 0, from = kst($('rkFrom').value), to0 = kst($('rkTo').value), to = to0 == null ? null : to0 + 59999;
+  if (from != null && to != null && from > to){ say('rankMsg', '기간의 시작이 끝보다 늦어요.', 'err'); return; }
+  const high = ROWS.filter(r => +r.height >= min);
+  const list = high.filter(r => { const t = recMs(r); return (from == null || t >= from) && (to == null || t <= to); }).sort(byRank);
+  if (!list.length){ say('rankMsg', '조건에 맞는 분이 없어요.', 'err'); RANKED = null; $('rankResult').hidden = true; return; }
+  const tied = i => (i > 0 && +list[i - 1].height === +list[i].height) || (i + 1 < list.length && +list[i + 1].height === +list[i].height);
+  const picks = []; let i = 0;
+  tiers.forEach((t, ti) => { for (let k = 0; k < t.count && i < list.length; k++, i++) picks.push({ id: list[i].id, no: i + 1, ti, tie: tied(i) }); });
+  const spare = Math.max(0, Math.min(50, Math.floor(+$('rkSpare').value) || 0));
+  const spares = list.slice(i, i + spare).map((r, k) => ({ id: r.id, no: i + k + 1, ti: -1, tie: tied(i + k) }));
+  const span = from == null && to == null ? '' : `, ${from == null ? '' : fmtFull(new Date(from).toISOString()).slice(0, 16) + '부터 '}${to == null ? '' : fmtFull(new Date(to0).toISOString()).slice(0, 16) + '까지 '}기록한 분`;
+  RANKED = { picks, spares, tiers, seats: tiers.reduce((a, t) => a + t.count, 0), size: list.length, out: high.length - list.length,
+    edge: i > 0 && i < list.length && +list[i - 1].height === +list[i].height, label: `기록 ${fmtH(min)} 이상${span}`, at: new Date().toISOString(), saved: false };
+  say('rankMsg', '');
+  showRank();
+}
+function showRank(){
+  const R = RANKED, find = p => ({ p, r: ROWS.find(r => r.id === p.id) });
+  const picks = R.picks.map(find).filter(x => x.r), spares = R.spares.map(find).filter(x => x.r);
+  $('rkTitle').textContent = R.saved ? `당첨 ${picks.length}명을 저장했어요` : `순위 결과: 당첨 ${picks.length}명` + (spares.length ? `, 예비 ${spares.length}명` : '');
+  $('rkSub').textContent = `대상: ${R.label} ${R.size}명` + (R.out ? ` (기록은 되지만 기간 밖이라 뺀 분 ${R.out}명)` : '') + `. 순위 매긴 시각 ${fmtFull(R.at)}.`;
+  const line = ({ p, r }) => { const t = R.tiers[p.ti]; return `<tr class="${t ? '' : 'spare'}"><td class="num">${p.no}</td><td>${t ? esc(t.name) : '예비'}</td><td>${t ? esc(t.prize) : ''}</td>
+    <td>${esc(showName(r.name))}</td><td>${esc(showPhone(r.phone))}</td><td class="num">${esc(fmtH(r.height))}</td><td title="${esc(fmtFull(recAt(r)))}">${esc(fmtSec(recAt(r)))}</td>
+    <td>${p.tie ? '<span class="tag">동점</span>' : ''}${p.tie && loose(r) ? '<span class="tag warn">시각 확인</span>' : ''}</td></tr>`; };
+  $('rkRows').innerHTML = picks.concat(spares).map(line).join('');
+  const warn = [], ids = new Set(R.picks.map(p => p.id));
+  if (picks.length < R.seats) warn.push(`대상이 ${R.size}명이라 ${R.seats - picks.length}자리가 비어요.`);
+  if (R.edge) warn.push(`당첨 끝자리(${R.picks.length}위)와 그다음 분의 기록이 같아서, 기록한 시각이 빠른 분이 당첨이에요.`);
+  if (picks.concat(spares).some(x => x.p.tie && loose(x.r))) warn.push('"시각 확인" 표시가 있는 분은 같은 번호로 다시 응모한 적이 있어요. 서버에 기록 세운 시각이 따로 없어 마지막 응모 시각으로 봤으니, 동점인 분과 순서가 맞는지 확인해 주세요.');
+  const stale = ROWS.filter(r => r.winner && !ids.has(r.id));
+  if (stale.length) warn.push(`지금 당첨으로 표시된 분 가운데 이번 순위에 없는 분이 ${stale.length}명 있어요. 저장해도 그 표시는 남으니 아래 명단에서 "당첨 취소"로 지워 주세요.`);
+  $('rkWarn').innerHTML = warn.map(w => `<li>${esc(w)}</li>`).join('');
+  $('rkWarn').hidden = !warn.length;
+  $('btnSaveRank').hidden = R.saved;
+  $('rankResult').hidden = false;
+}
+async function saveRank(){
+  if (!RANKED || RANKED.saved) return;
+  $('btnSaveRank').disabled = true;
+  let n = 0;
+  try {
+    for (let ti = 0; ti < RANKED.tiers.length; ti++){
+      const t = RANKED.tiers[ti], ids = RANKED.picks.filter(p => p.ti === ti && ROWS.some(r => r.id === p.id)).map(p => p.id);
+      if (!ids.length) continue;
+      const r = await rpc('macaron_entries_mark', { p_token: TOKEN, p_ids: ids, p_winner: true, p_prize: `${t.name} ${t.prize}`.slice(0, 60) });
+      if (!r || !r.ok) throw new Error('fail');
+      n += r.changed;
+    }
+    RANKED.saved = true;
+    say('rankMsg', `${n}명을 당첨으로 표시했어요.`, 'ok');
+  } catch (e) {
+    say('rankMsg', (n ? `${n}명까지만 저장됐어요. ` : '') + (e.message === 'fail' ? '저장하지 못했어요. 토큰을 확인하고 다시 눌러 주세요.' : failText(e)), 'err');
+  } finally {
+    $('btnSaveRank').disabled = false;
+    await load(true);
+  }
+}
+
 /* ---------- 엑셀용 파일 ---------- */
 function csv(){
   const cell = v => { v = String(v == null ? '' : v); return /^[=+\-@\t\r]/.test(v) ? `"'${v.replace(/"/g, '""')}"` : /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
-  const head = ['번호', '응모 시각', '성함', '연락처', '기록(m)', '마카롱 수', '응모 횟수', '들어온 길', '동의 안내문 판', '당첨', '경품', '당첨 표시 시각'];
+  const head = ['번호', '응모 시각', '성함', '연락처', '기록(m)', '마카롱 수', '응모 횟수', '들어온 길', '동의 안내문 판', '당첨', '경품', '당첨 표시 시각', '기록한 시각'];
   const lines = [head.join(',')].concat(visibleRows().map(r => [r.id, fmtFull(r.at), r.name, fmtPhone(r.phone), r.height, r.macarons, r.tries, r.source || '', r.consent || '',
-    r.winner ? '당첨' : '', r.prize || '', r.won_at ? fmtFull(r.won_at) : ''].map(cell).join(',')));
+    r.winner ? '당첨' : '', r.prize || '', r.won_at ? fmtFull(r.won_at) : '', fmtFull(recAt(r))].map(cell).join(',')));
   const d = new Date(), name = `macaron-raffle-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.csv`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
@@ -284,6 +418,7 @@ $('rows').addEventListener('click', async e => {
       const r = await rpc('macaron_entries_delete', { p_token: TOKEN, p_id: id });
       if (!r || !r.ok) throw new Error('fail');
       if (PICK && !PICK.saved && PICK.ids.includes(id)){ PICK = null; $('drawResult').hidden = true; }
+      if (RANKED && !RANKED.saved){ RANKED = null; $('rankResult').hidden = true; say('rankMsg', '명단이 바뀌어 순위 결과를 닫았어요. 다시 매겨 주세요.'); }
     }
     await load(true);
   } catch (err) { say('loadMsg', err.message === 'fail' ? '처리하지 못했어요. 토큰을 확인해 주세요.' : failText(err), 'err'); }
@@ -293,13 +428,17 @@ $('fLoad').addEventListener('submit', e => { e.preventDefault(); load(false); })
 $('btnReload').addEventListener('click', () => load(false));
 $('btnForget').addEventListener('click', () => {
   try { sessionStorage.removeItem('raffleAdminToken'); } catch (e) {}
-  $('token').value = ''; TOKEN = ''; ROWS = []; PICK = null;
-  ['tiles', 'drawCard', 'listSec'].forEach(id => { $(id).hidden = true; });
+  $('token').value = ''; TOKEN = ''; ROWS = []; PICK = null; RANKED = null;
+  ['tiles', 'rankCard', 'drawCard', 'listSec', 'rankResult', 'drawResult'].forEach(id => { $(id).hidden = true; });
   say('loadMsg', '토큰과 화면의 명단을 지웠어요.');
 });
 $('mask').addEventListener('change', render);
 $('q').addEventListener('input', render);
 $('view').addEventListener('change', render);
+$('sort').addEventListener('change', render);
+$('btnRank').addEventListener('click', rankNow);
+$('btnSaveRank').addEventListener('click', saveRank);
+$('btnDropRank').addEventListener('click', () => { RANKED = null; $('rankResult').hidden = true; say('rankMsg', ''); });
 $('dPool').addEventListener('change', () => { $('dMinWrap').hidden = $('dPool').value !== 'min'; });
 $('btnDraw').addEventListener('click', draw);
 $('btnRedraw').addEventListener('click', draw);
