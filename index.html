@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 타워 챌린지">
 <meta property="og:description" content="파크 하얏트 부산과 피에르 에르메의 크리스마스 윈터 라운지 이벤트">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611191638">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611201352">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -716,6 +716,8 @@ const S = {
 const sx = (x, s = 1) => W / 2 + (x - S.camX) * ppm * s;
 const sy = (y, s = 1) => focusY - (y - S.camH) * ppm * s;
 const camMin = () => GROUND + (H * 0.87 - focusY) / ppm;
+const SANTA = { h: 0, v: 0, ph: 0, rain: 0, winAt: 0 };   // Santa on the Eiffel Tower: his height in tower metres, climbing speed, and the phase of his arms and legs
+let GIFTS = [];                                            // presents in the air, in tower-layer metres
 
 /* ---------- macaron sprites ---------- */
 let SPR = [];
@@ -1519,6 +1521,7 @@ function spawn(){
 function resetRun(){
   Object.assign(S, { stack: [], lives: 3, combo: 0, maxCombo: 0, perfects: 0, endless: false, cur: null, ghost: null, groups: [], parts: [], texts: [], streaks: [],
     wind: 0, windTarget: 0, windNext: 0, wobA: 0.06, inst: 0, kx: 0, kv: 0, nextAt: -1, endAt: -1, peak: 0, peakN: 0, passed: new Set(), playTime: 0, shake: 0 });
+  GIFTS = []; SANTA.rain = 0;
 }
 function newGame(){
   playSent = false;
@@ -1589,6 +1592,7 @@ function success(perfect, m, a){
     vibrate(10);
   }
   crumbs(m.x, y, FLAVORS[m.c], perfect ? 4 : 9);
+  if (perfect) giftToss(S.combo >= 3 ? 2 : 1); else if (Math.random() < 0.4) giftToss(1);   // a present slips out of Santa's sack as he climbs
   const h = heightOf(n);
   if (h > S.peak){ S.peak = h; S.peakN = n; }
   checkMilestones(h);
@@ -1600,6 +1604,7 @@ function miss(kind, count){
   sfx.miss(); vibrate([30, 40, 40]);
   if (kind === 'topple'){
     S.shake = REDUCED ? 0.15 : 0.7; sfx.thud();
+    giftToss(4, true);   // Santa slips with the stack and spills a few
     jolt(Math.random() < 0.5 ? 1 : -1, 0.3, S.stack.length);   // what is left of the tower sways after the fall
     toast('와르르', `마카롱 ${count}개가 떨어졌어요`, '한쪽으로 너무 기울었어요');
   }
@@ -1611,12 +1616,13 @@ function checkMilestones(h){
   for (const ms of (S.endless ? EXTRA : MILESTONES)){
     if (h >= ms.h && !S.passed.has(ms.name)){
       S.passed.add(ms.name);
-      if (!ms.goal){ toast(`${fmt(ms.h)}m 돌파`, ms.name, ms.sub); sfx.milestone(); }
+      if (!ms.goal){ toast(`${fmt(ms.h)}m 돌파`, ms.name, ms.sub); sfx.milestone(); giftToss(3, true); }
     }
   }
 }
 function win(){
   setMode('win'); S.fwNext = S.t + 0.25; sfx.win();
+  SANTA.winAt = S.t; giftToss(6, true);
   playPing();
   saveBest(S.peak);
   $('wCombo').textContent = S.maxCombo;
@@ -1875,6 +1881,7 @@ function update(dt){
   const tx = nNow ? S.stack[nNow - 1].x * 0.7 : 0;
   S.camX += (tx - S.camX) * (1 - Math.exp(-dt * 1.4));
   S.shake = Math.max(0, S.shake - dt * 1.6);
+  updateSanta(dt, topNow);
 
   // sky dwellers
   for (const c of CLOUDS.concat(FCLOUDS)){
@@ -1948,6 +1955,146 @@ function drawEiffelLayer(dark){
     }
     ctx.globalAlpha = 1;
   }
+}
+/* ---------- Santa climbs the tower a step ahead of the stack, and presents fall ---------- */
+// Santa and the presents live on the tower layer (its scale and parallax). He keeps to the tower's left edge, the side that is on screen,
+// and stays just above the top macaron so the stack never hides him. Presents drop out of his sack, and now and then from the sky.
+const E_TOP = [[274, 5.18], [276, 4.6], [281, 4.6], [283, 3.4], [299, 2.4], [301, 1.4], [304, 0.55], [330, 0.35]];
+function eEdge(h){   // half the width of the tower's outline at height h
+  if (h <= 274) return eHalf(Math.max(0, h));
+  for (let i = 1; i < E_TOP.length; i++) if (h <= E_TOP[i][0]){ const a = E_TOP[i - 1], b = E_TOP[i]; return a[1] + (b[1] - a[1]) * (h - a[0]) / (b[0] - a[0]); }
+  return 0.35;
+}
+const SANTA_TOP = 326;   // he holds on to the antenna just under its tip
+const santaPx = () => clamp(macPx * 0.54, 40, 62);
+const santaLead = () => (santaPx() * 0.55 + 8) / EIF.k;
+function santaAt(){
+  const k = EIF.k, bx = W / 2 + (eiffelX - S.camX) * k, by = focusY + S.camH * k;
+  return [bx - eEdge(SANTA.h) * k, by - SANTA.h * k, santaPx()];
+}
+const GIFT_COLS = [['#de281b', '#fff6e0'], ['#2c7a56', '#f6dd85'], ['#f6dd85', '#de281b'], ['#fff6e0', '#de281b'], ['#f39ab4', '#fff6e0'], ['#c0ced7', '#de281b']];
+function giftPush(g){
+  if (GIFTS.length < 180) GIFTS.push(Object.assign({ rot: Math.random() * 6.28, av: (Math.random() * 2 - 1) * 3.2, c: (Math.random() * GIFT_COLS.length) | 0, ph: Math.random() * 6.28, sw: 0.5 + Math.random() * 1.2, life: 0, front: false }, g));
+}
+function giftToss(n, spill){   // out of Santa's sack
+  if (!EIF) return;
+  if (REDUCED) n = 1;
+  const k = EIF.k, px = santaPx(), x0 = -eEdge(SANTA.h) - px * 0.62 / k, h0 = SANTA.h + px * 0.22 / k;
+  for (let i = 0; i < n; i++) giftPush({ x: x0, h: h0, vx: -(1.5 + Math.random() * (spill ? 10 : 6)) * (Math.random() < 0.2 ? -0.5 : 1), vy: 7 + Math.random() * (spill ? 13 : 8), vt: 22 + Math.random() * 10, s: px * (0.3 + Math.random() * 0.12) });
+}
+function giftRain(party){      // from the sky: now and then while playing, a shower once the top is reached
+  const k = EIF.k, bx = W / 2 + (eiffelX - S.camX) * k, by = focusY + S.camH * k, px = santaPx();
+  const front = party && Math.random() < 0.45;
+  giftPush({ x: (Math.random() * (W + 40) - 20 - bx) / k, h: (by + 24 + Math.random() * 50) / k, vx: (Math.random() * 2 - 1) * 2, vy: -(10 + Math.random() * 8),
+    vt: front ? 34 + Math.random() * 14 : 20 + Math.random() * 9, s: px * (front ? 0.42 + Math.random() * 0.3 : 0.26 + Math.random() * 0.14), front });
+}
+function updateSanta(dt, top){
+  if (!EIF) return;
+  const d = Math.min(SANTA_TOP, top + santaLead()) - SANTA.h;
+  SANTA.v = Math.abs(d) < 0.02 ? 0 : d > 0 ? Math.min(d * 5, 12) : Math.max(d * 6, -160);   // he climbs hand over hand, and slides when the stack falls
+  SANTA.h += SANTA.v * dt; SANTA.ph += Math.abs(SANTA.v) * dt * 1.9;
+  let rate = 0;
+  if (S.mode === 'win') rate = S.t - SANTA.winAt < 5 ? 14 : 4;
+  else if (S.mode === 'over' && S.peak >= 330) rate = 2;
+  else if (S.mode === 'play' && !REDUCED) rate = 0.22;
+  if (REDUCED) rate *= 0.3;
+  SANTA.rain += rate * dt;
+  while (SANTA.rain >= 1){ SANTA.rain -= 1; giftRain(S.mode !== 'play'); }
+  if (!GIFTS.length) return;
+  const k = EIF.k, by = focusY + S.camH * k;
+  for (const g of GIFTS){
+    g.life += dt;
+    g.vy = Math.max(-g.vt, g.vy - 30 * dt); g.vx *= Math.exp(-dt * 0.9);
+    g.x += (g.vx + Math.sin(S.t * 2.3 + g.ph) * g.sw) * dt; g.h += g.vy * dt; g.rot += g.av * dt;
+    if (by - g.h * k > H + 40 || g.life > 16) g.dead = true;
+  }
+  GIFTS = GIFTS.filter(g => !g.dead);
+}
+function drawGift(x, y, s, rot, col, a){
+  const h = s / 2, t = -h * 0.8;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.globalAlpha = a;
+  ctx.fillStyle = col[0]; ctx.beginPath(); rr(ctx, -h, t, s, s * 0.86, s * 0.1); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,248,230,.5)'; ctx.lineWidth = 0.8; ctx.stroke();
+  ctx.fillStyle = 'rgba(40,20,30,.16)'; ctx.fillRect(-h, t + s * 0.24, s, s * 0.05);   // the lid's edge
+  ctx.fillStyle = col[1];
+  ctx.fillRect(-s * 0.08, t, s * 0.16, s * 0.86); ctx.fillRect(-h, t + s * 0.4, s, s * 0.13);   // ribbon
+  ctx.beginPath(); ctx.ellipse(-s * 0.17, t - s * 0.06, s * 0.18, s * 0.11, -0.45, 0, 6.2832); ctx.fill();   // bow
+  ctx.beginPath(); ctx.ellipse(s * 0.17, t - s * 0.06, s * 0.18, s * 0.11, 0.45, 0, 6.2832); ctx.fill();
+  ctx.restore();
+}
+function drawGifts(front){
+  if (!GIFTS.length) return;
+  const k = EIF.k, bx = W / 2 + (eiffelX - S.camX) * k, by = focusY + S.camH * k;
+  for (const g of GIFTS){
+    if (g.front !== front) continue;
+    const x = bx + g.x * k, y = by - g.h * k;
+    if (y < -40 || x < -40 || x > W + 40) continue;
+    drawGift(x, y, g.s, g.rot, GIFT_COLS[g.c], Math.min(1, g.life * 6));
+  }
+}
+function drawSanta(dark){
+  if (!EIF) return;
+  const [x, y, px] = santaAt(), h = SANTA.h;
+  if (y < -px || y > H + px || x < -px || x > W + px * 2) return;
+  const u = px / 10, lean = clamp(Math.atan((eEdge(h - 2) - eEdge(h + 2)) / 4), 0, 0.5);   // he leans with the ironwork
+  const top = h >= SANTA_TOP - 1.5, slip = SANTA.v < -18, moving = Math.min(1, Math.abs(SANTA.v) / 3);
+  const a = Math.sin(SANTA.ph), idle = REDUCED ? 0 : Math.sin(S.t * 2.2), sway = idle * 0.12 + a * 0.15 * moving;
+  const RED = '#de281b', RED2 = '#a81d14', FUR = '#fffaf0', INK = '#3a2a2e';
+  ctx.save(); ctx.translate(x, y); ctx.rotate(lean); ctx.scale(u, u);
+  ctx.translate(0, idle * 0.1 - Math.abs(Math.cos(SANTA.ph)) * 0.3 * moving);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const halo = ctx.createRadialGradient(-3.4, -0.4, 1, -3.4, -0.4, 8.5);   // a soft light so he reads against the night
+  halo.addColorStop(0, `rgba(255,244,214,${0.24 * dark})`); halo.addColorStop(1, 'rgba(255,244,214,0)');
+  ctx.fillStyle = halo; ctx.fillRect(-12, -9, 17, 17);
+  ctx.shadowColor = 'rgba(20,12,34,.5)'; ctx.shadowBlur = 2.5;
+  // hands and feet in his own frame: the edge of the tower is x = 0, up is -y
+  let hn = [0.15, -2.7 - 1.5 * a], hf = [0.1, -2.7 + 1.5 * a], fn = [-0.25, 3.7 + 1.0 * a], ff = [-0.3, 3.7 - 1.0 * a];
+  if (slip){ hn = [0.2, -4.3]; hf = [0.1, -3.7]; fn = [-2.3, 5.0]; ff = [-3.6, 4.9]; }
+  else if (top) hn = [-0.3 + Math.cos(S.t * 7) * 0.9, -6.7];   // at the top he waves
+  const limb = (x0, y0, p, cx, cy, w, col) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo((x0 + p[0]) / 2 + cx, (y0 + p[1]) / 2 + cy, p[0], p[1]); ctx.stroke(); };
+  const mitt = (x0, y0, p) => {
+    const dx = x0 - p[0], dy = y0 - p[1], L = Math.hypot(dx, dy) || 1;
+    ctx.fillStyle = FUR; ctx.beginPath(); ctx.arc(p[0] + dx / L * 0.6, p[1] + dy / L * 0.6, 0.74, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = '#2c6e4f'; ctx.beginPath(); ctx.arc(p[0], p[1], 0.68, 0, 6.2832); ctx.fill();
+  };
+  const boot = p => { ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(p[0] - 0.1, p[1], 1.0, 0.68, -0.25, 0, 6.2832); ctx.fill(); };
+  // the sack on his back, a present peeking out
+  ctx.save(); ctx.translate(-7.1, -3.2 + sway); ctx.rotate(-0.3); ctx.fillStyle = '#f6dd85'; ctx.fillRect(-0.95, -0.9, 1.9, 1.8); ctx.fillStyle = RED; ctx.fillRect(-0.2, -0.9, 0.4, 1.8); ctx.restore();
+  ctx.fillStyle = '#b98a58';
+  ctx.beginPath(); ctx.ellipse(-6.5, 0.3 + sway, 2.7, 3.1, -0.22, 0, 6.2832); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-6.2, -2.6 + sway); ctx.quadraticCurveTo(-4.6, -3.0, -3.3, -1.9); ctx.lineTo(-3.6, -0.9); ctx.quadraticCurveTo(-4.8, -1.6, -6.4, -1.0 + sway); ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(96,60,28,.38)'; ctx.beginPath(); ctx.ellipse(-7.2, 1.2 + sway, 1.5, 2.1, -0.22, 0, 6.2832); ctx.fill();
+  ctx.shadowBlur = 2.5;
+  // the far arm and leg
+  limb(-3.5, 2.7, ff, 0.5, -1.1, 1.45, RED2); boot(ff);
+  limb(-2.9, -1.5, hf, 0, 0.9, 1.3, RED2); mitt(-2.9, -1.5, hf);
+  // coat, belt, fur hem
+  ctx.fillStyle = RED; ctx.beginPath(); ctx.ellipse(-3.3, 0.7, 2.15, 2.75, 0.06, 0, 6.2832); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.save(); ctx.clip();
+  ctx.fillStyle = INK; ctx.fillRect(-6, 1.0, 6, 0.8);
+  ctx.fillStyle = '#f2c14e'; ctx.fillRect(-1.95, 0.9, 0.85, 1.0);
+  ctx.fillStyle = FUR; ctx.fillRect(-6, 2.7, 6, 1.4);
+  ctx.restore();
+  ctx.shadowBlur = 2.5;
+  // head, beard, hat
+  ctx.fillStyle = '#f3c7a6'; ctx.beginPath(); ctx.arc(-2.7, -3.0, 1.5, 0, 6.2832); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = FUR; ctx.beginPath(); ctx.ellipse(-2.2, -1.9, 1.6, 1.25, 0.2, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = '#e39a8a'; ctx.beginPath(); ctx.arc(-1.35, -3.0, 0.32, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(-2.0, -3.45, 0.2, 0, 6.2832); ctx.fill();
+  ctx.shadowBlur = 2.5;
+  const pom = slip ? [-4.4, -6.5] : [-5.5, -4.3 + idle * 0.15];
+  ctx.fillStyle = RED; ctx.beginPath(); ctx.moveTo(-1.25, -4.1); ctx.quadraticCurveTo(-2.3, -6.3, -3.9, -5.7); ctx.quadraticCurveTo(pom[0] + 0.3, pom[1] - 1.0, pom[0], pom[1]); ctx.quadraticCurveTo(-4.7, -4.9, -4.2, -3.6); ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = FUR; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(-4.25, -3.65); ctx.lineTo(-1.2, -4.1); ctx.stroke();
+  ctx.fillStyle = FUR; ctx.beginPath(); ctx.arc(pom[0], pom[1], 0.66, 0, 6.2832); ctx.fill();
+  ctx.shadowBlur = 2.5;
+  // the near leg and arm
+  limb(-3.0, 2.7, fn, 0.5, -1.1, 1.5, RED); boot(fn);
+  limb(-2.5, -1.4, hn, top && !slip ? 1.5 : 0, top && !slip ? 0.4 : 0.9, 1.35, RED); mitt(-2.5, -1.4, hn);
+  ctx.restore();
 }
 function drawClouds(list, dark, alpha){
   for (const c of list){
@@ -2165,6 +2312,8 @@ function render(){
   if (S.shake > 0) ctx.translate((Math.random() * 2 - 1) * S.shake * 9, (Math.random() * 2 - 1) * S.shake * 6);
   drawFar(bot);
   drawEiffelLayer(dark);
+  drawGifts(false);
+  drawSanta(dark);
   drawPlane(dark);
   drawClouds(CLOUDS, dark, 0.95);
   drawBalloon(dark);
@@ -2175,6 +2324,7 @@ function render(){
   drawGroups();
   drawParticles();
   drawCurrent(dark);
+  drawGifts(true);
   drawClouds(FCLOUDS, dark, 0.3);
   drawSnow(true);
   drawStreaks();
@@ -2749,7 +2899,7 @@ if (hot && typeof hot.snapshot === 'function'){
   } catch (e) {}
 }
 if (document.fonts && document.fonts.ready) Promise.all([document.fonts.ready, document.fonts.load('700 20px "Gala Futura Full"', 'A0').catch(() => {})]).then(() => { if (NEAR) buildNear(); fitIntro(); });   // 거리 간판 글자도 Futura 로 다시 그린다
-window.MacaronEiffel = { state: S, drop, newGame, hard: HARD };
+window.MacaronEiffel = { state: S, drop, newGame, hard: HARD, santa: SANTA, santaAt, gifts: () => GIFTS };
 hot && typeof hot.ready === 'function' ? hot.ready(boot) : boot((hot && hot.data) || {});
 })();
 </script>
