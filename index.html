@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 타워 챌린지">
 <meta property="og:description" content="파크 하얏트 부산과 피에르 에르메의 크리스마스 윈터 라운지 이벤트">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611201352">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611260946">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -1523,8 +1523,7 @@ function resetRun(){
     wind: 0, windTarget: 0, windNext: 0, wobA: 0.06, inst: 0, kx: 0, kv: 0, nextAt: -1, endAt: -1, peak: 0, peakN: 0, passed: new Set(), playTime: 0, shake: 0 });
   GIFTS = []; SANTA.rain = 0;
 }
-function newGame(){
-  playSent = false;
+function newGame(again){
   const intro = $('pStart');
   if (!intro.hidden && !intro.classList.contains('leaving')){
     intro.classList.add('leaving');
@@ -1532,10 +1531,12 @@ function newGame(){
   }
   PANELS.forEach(id => { if (id !== 'pStart') $(id).hidden = true; });
   resetRun(); setMode('play'); buildRail(); spawn();
+  runBegin(again === true);
 }
 function drop(){
   const c = S.cur;
   if (S.mode !== 'play' || !c || c.state !== 'hold' || S.t - c.born < 0.12) return;
+  RUN.taps++;
   c.state = 'fall'; c.vy = 0; c.vx = S.wind;
   S.ghost = { x: c.x, y: c.y, t0: S.t };
   sfx.drop();
@@ -1577,6 +1578,7 @@ function toppleFrom(j){
 }
 function success(perfect, m, a){
   const n = S.stack.length, y = (n - 1) * MAC_H;
+  RUN.landed++;
   if (perfect){
     S.combo++; S.perfects++; S.maxCombo = Math.max(S.maxCombo, S.combo);
     sfx.perfect(S.combo); sparkle(m.x, y + MAC_H * 0.5);
@@ -1600,7 +1602,7 @@ function success(perfect, m, a){
   S.nextAt = S.t + (perfect ? 0.28 : 0.36);
 }
 function miss(kind, count){
-  S.lives--; S.combo = 0;
+  S.lives--; S.combo = 0; RUN.misses++;
   sfx.miss(); vibrate([30, 40, 40]);
   if (kind === 'topple'){
     S.shake = REDUCED ? 0.15 : 0.7; sfx.thud();
@@ -1623,7 +1625,7 @@ function checkMilestones(h){
 function win(){
   setMode('win'); S.fwNext = S.t + 0.25; sfx.win();
   SANTA.winAt = S.t; giftToss(6, true);
-  playPing();
+  runFinish();
   saveBest(S.peak);
   $('wCombo').textContent = S.maxCombo;
   $('wLives').textContent = S.lives;
@@ -1650,7 +1652,7 @@ function compareText(h){
 }
 function gameOver(){
   setMode('over');
-  playPing();   // a run that went on past the top was already counted when it got there
+  runFinish();   // a run that went on past the top was already counted when it got there: this only raises its record
   const peak = S.peak, best = saveBest(peak), isNew = peak > best && peak > 0;
   $('oH').textContent = fmt(peak);
   $('overTitle').textContent = isNew ? '새 최고 기록이에요!' : '기회를 모두 썼어요';
@@ -1666,8 +1668,10 @@ function gameOver(){
   showPanel('pOver');
 }
 const GAME_URL = 'https://macaron-eiffel.vercel.app';
-function storyText(){ return `마카롱으로 에펠탑 꼭대기(330m)까지 쌓아 보세요. 오늘의 즐거움을 함께 나눠요.\n${GAME_URL}`; }
-function inviteText(){ return `마카롱으로 에펠탑 꼭대기(330m)까지 쌓아 볼래요?\n${GAME_URL}`; }
+// what gets shared: on the event site the link carries from=share, so the daily tally can tell who came through a friend's message
+function shareUrl(){ return !rankOn() || GAME_URL.includes('?') ? GAME_URL : GAME_URL.replace(/\/?$/, '/') + '?from=share'; }
+function storyText(){ return `마카롱으로 에펠탑 꼭대기(330m)까지 쌓아 보세요. 오늘의 즐거움을 함께 나눠요.\n${shareUrl()}`; }
+function inviteText(){ return `마카롱으로 에펠탑 꼭대기(330m)까지 쌓아 볼래요?\n${shareUrl()}`; }
 // what goes to KakaoTalk: who did it, how high, and a dare to beat that person. Without a nickname it stays a plain dare.
 function shareWho(){
   const nick = rankOn() ? savedNick() : '';
@@ -1675,13 +1679,13 @@ function shareWho(){
 }
 function winText(){
   const me = shareWho(), t = $('wTime').textContent;
-  if (!me) return `마카롱 타워 챌린지에서 마카롱 100개로 에펠탑 꼭대기 330m에 닿았어요! 걸린 시간 ${t}. 이 기록을 넘을 수 있을까요?\n${GAME_URL}`;
-  return `[마카롱 타워 챌린지 도전장]\n${me.nick}님이 마카롱 100개로 에펠탑 꼭대기 330m에 닿았어요! 걸린 시간 ${t}.${me.rank ? ` 오늘 랭킹 ${me.rank}위예요.` : ''}\n${me.nick}님보다 더 빨리 오를 수 있을까요? 지금 도전해 보세요.\n${GAME_URL}`;
+  if (!me) return `마카롱 타워 챌린지에서 마카롱 100개로 에펠탑 꼭대기 330m에 닿았어요! 걸린 시간 ${t}. 이 기록을 넘을 수 있을까요?\n${shareUrl()}`;
+  return `[마카롱 타워 챌린지 도전장]\n${me.nick}님이 마카롱 100개로 에펠탑 꼭대기 330m에 닿았어요! 걸린 시간 ${t}.${me.rank ? ` 오늘 랭킹 ${me.rank}위예요.` : ''}\n${me.nick}님보다 더 빨리 오를 수 있을까요? 지금 도전해 보세요.\n${shareUrl()}`;
 }
 function resultText(){
   const me = shareWho();
-  if (!me) return `마카롱 타워 챌린지에서 마카롱 ${S.peakN}개로 ${fmt(S.peak)}m를 쌓았어요! ${compareText(S.peak)} 이 기록을 넘을 수 있을까요?\n${GAME_URL}`;
-  return `[마카롱 타워 챌린지 도전장]\n${me.nick}님이 마카롱 ${Math.round(me.h / MAC_H)}개로 ${fmt(me.h)}m를 쌓았어요!${me.rank ? ` 오늘 랭킹 ${me.rank}위예요.` : ''}\n${me.nick}님보다 더 높이 쌓을 수 있을까요? 지금 도전해 보세요.\n${GAME_URL}`;
+  if (!me) return `마카롱 타워 챌린지에서 마카롱 ${S.peakN}개로 ${fmt(S.peak)}m를 쌓았어요! ${compareText(S.peak)} 이 기록을 넘을 수 있을까요?\n${shareUrl()}`;
+  return `[마카롱 타워 챌린지 도전장]\n${me.nick}님이 마카롱 ${Math.round(me.h / MAC_H)}개로 ${fmt(me.h)}m를 쌓았어요!${me.rank ? ` 오늘 랭킹 ${me.rank}위예요.` : ''}\n${me.nick}님보다 더 높이 쌓을 수 있을까요? 지금 도전해 보세요.\n${shareUrl()}`;
 }
 function pause(){
   if (S.mode !== 'play') return;
@@ -2337,9 +2341,12 @@ let last = performance.now();
 function frame(now){
   requestAnimationFrame(frame);
   let dt = (now - last) / 1000; last = now;
-  if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
-  if (S.mode !== 'paused') update(dt);
-  updateHUD(dt);
+  if (dt < 0) dt = 0;
+  if (S.mode === 'play'){ RUN.wall += Math.min(dt, 2); RUN.frames++; }
+  // a slow frame is caught up in steps of at most 0.05 s (up to a quarter second per frame): a low frame rate must not turn into slow motion
+  let left = Math.min(dt, 0.25);
+  do { const st = Math.min(left, 0.05); if (S.mode !== 'paused') update(st); left -= st; } while (left > 1e-4);
+  updateHUD(Math.min(dt, 0.05));
   render();
 }
 
@@ -2351,7 +2358,9 @@ function setMuted(m){
   $('soundOff').hidden = !m;
   $('btnSound').setAttribute('aria-label', m ? '소리 켜기' : '소리 끄기');
 }
-cv.addEventListener('pointerdown', e => { e.preventDefault(); audio(); if (S.mode === 'play') drop(); });
+// only a real touch, click or key drops a macaron: an event made by a script (isTrusted false) is ignored and counted
+const realTap = e => e.isTrusted !== false || (RUN.fake++, false);
+cv.addEventListener('pointerdown', e => { e.preventDefault(); audio(); if (S.mode === 'play' && realTap(e)) drop(); });
 addEventListener('keydown', e => {
   if (splashOn){ e.preventDefault(); if (e.code === 'Escape') closeSplash(true); else if (e.code === 'ArrowLeft') splashPrev(); else splashNext(); return; }   // 접속 인트로가 떠 있으면 키는 인트로만 넘긴다(Esc 는 건너뛰기)
   if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;   // 닉네임을 적는 중에는 단축키를 쓰지 않는다
@@ -2359,7 +2368,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter'){
     if (onButton) return;
     e.preventDefault(); audio();
-    if (S.mode === 'play') drop();
+    if (S.mode === 'play'){ if (realTap(e)) drop(); }
     else if (S.mode === 'title') newGame();
   } else if (e.code === 'KeyP' || e.code === 'Escape'){
     if (S.mode === 'play') pause(); else if (S.mode === 'paused') resume();
@@ -2367,23 +2376,24 @@ addEventListener('keydown', e => {
 });
 const tap = (id, fn) => $(id).addEventListener('click', e => { audio(); fn(e); });
 tap('btnStart', newGame);
-tap('btnRetry', newGame);
-tap('btnWinRestart', newGame);
-tap('btnPauseRestart', newGame);
+tap('btnRetry', () => newGame(true));
+tap('btnWinRestart', () => newGame(true));
+tap('btnPauseRestart', () => newGame(true));
 tap('btnResume', resume);
 tap('btnMore', continueEndless);
 tap('btnSound', () => { setMuted(!muted); $('btnSound').blur(); });
 tap('btnPause', () => { if (S.mode === 'play') pause(); else if (S.mode === 'paused') resume(); $('btnPause').blur(); });
 // copy a message with the game link; when the clipboard is refused, show the text so it can be selected
-function shareCopy(btnId, text, okLabel, box){
+function shareCopy(btnId, text, okLabel, box, kind){
   const btn = $(btnId), label = btn.querySelector('span') || btn, orig = label.textContent;
-  const fallback = () => { box.hidden = false; box.value = box.tagName === 'INPUT' ? GAME_URL : text; box.focus(); box.select(); label.textContent = '아래 내용을 길게 눌러 복사하세요'; };
+  hit('s:' + kind);
+  const fallback = () => { box.hidden = false; box.value = box.tagName === 'INPUT' ? shareUrl() : text; box.focus(); box.select(); label.textContent = '아래 내용을 길게 눌러 복사하세요'; };
   try {
     navigator.clipboard.writeText(text).then(() => { label.textContent = okLabel; setTimeout(() => { label.textContent = orig; }, 2200); }, fallback);
   } catch (e) { fallback(); }
 }
-$('btnCopy').addEventListener('click', () => shareCopy('btnCopy', resultText(), '복사했어요. 카카오톡에 붙여 넣으세요', $('oShare')));
-$('btnWinShare').addEventListener('click', () => shareCopy('btnWinShare', winText(), '복사했어요. 카카오톡에 붙여 넣으세요', $('wShare')));
+$('btnCopy').addEventListener('click', () => shareCopy('btnCopy', resultText(), '복사했어요. 카카오톡에 붙여 넣으세요', $('oShare'), 'result'));
+$('btnWinShare').addEventListener('click', () => shareCopy('btnWinShare', winText(), '복사했어요. 카카오톡에 붙여 넣으세요', $('wShare'), 'win'));
 // the story card: opened from the result cards, returns to whichever card opened it
 let storyFrom = 'pOver';
 function openStory(){
@@ -2405,8 +2415,8 @@ function openStory(){
 }
 document.querySelectorAll('[data-story]').forEach(b => b.addEventListener('click', openStory));
 $('btnStoryBack').addEventListener('click', () => showPanel(storyFrom));
-$('btnStoryShare').addEventListener('click', () => shareCopy('btnStoryShare', storyText(), '복사했어요. 메신저에 붙여 넣으세요', $('storyShare')));
-$('btnShareGame').addEventListener('click', () => shareCopy('btnShareGame', inviteText(), '링크를 복사했어요', $('introShare')));
+$('btnStoryShare').addEventListener('click', () => shareCopy('btnStoryShare', storyText(), '복사했어요. 메신저에 붙여 넣으세요', $('storyShare'), 'story'));
+$('btnShareGame').addEventListener('click', () => shareCopy('btnShareGame', inviteText(), '링크를 복사했어요', $('introShare'), 'invite'));
 /* ---------- today's ranking: a shared leaderboard (Supabase RPC). Off when RANK is empty (the artifact build) ---------- */
 // publish_web.py fills url and key from ranking-config.json. The key is the project's public (publishable) key;
 // the table is closed and only the macaron_submit / macaron_top functions are open, and they check the record.
@@ -2419,7 +2429,9 @@ const RANK_ERR = {
   limit: '오늘은 더 올릴 수 없어요. 내일 다시 도전해 주세요.',
   score: '이번 기록은 랭킹에 올릴 수 없어요.',
   busy: '지금 올리는 사람이 많아요. 잠시 뒤에 다시 눌러 주세요.',
-  device: '이 브라우저에서는 올릴 수 없어요.'
+  device: '이 브라우저에서는 올릴 수 없어요.',
+  run: '이번 판은 서버와 연결이 끊겨 기록을 확인하지 못했어요. 인터넷 연결을 확인하고 한 판 더 도전해 주세요.',
+  reload: '화면을 새로 고친 뒤 다시 도전해 주세요.'
 };
 let rankSent = '', rankBox = null, rankBusy = false, rankAgain = false, rankNow = null;
 const NICK_RE = /^[가-힣A-Za-z0-9 ]{1,8}$/;
@@ -2458,8 +2470,12 @@ function rankRows(list, n, meId){
 }
 const runKey = () => `${S.peakN}|${S.peak}|${S.playTime.toFixed(2)}`;
 function setRankMsg(t, err){ const m = rankBox.querySelector('.rank-msg'); m.textContent = t; m.classList.toggle('err', !!err); }
-const rankPost = nick => rankRpc('macaron_submit', { p_device: deviceId(), p_nick: nick, p_height: S.peak, p_macarons: S.peakN,
-  p_combo: S.maxCombo, p_secs: Math.round(S.playTime * 10) / 10, p_source: RANK_SRC });
+// the record goes up with the number of the run it came from: the server only takes it once that run has been reported as finished
+async function rankPost(nick){
+  const body = { p_device: deviceId(), p_nick: nick, p_height: S.peak, p_macarons: S.peakN, p_combo: S.maxCombo, p_secs: Math.round(S.playTime * 10) / 10, p_source: RANK_SRC };
+  body.p_run = await runDone();
+  return rankRpc('macaron_submit', body);
+}
 function rankTop(list, meId){
   const ol = rankBox.querySelector('.rank-list');
   ol.innerHTML = rankRows(list, 5, meId); ol.hidden = false;
@@ -2573,19 +2589,47 @@ async function openRank(){
 $('btnRank').addEventListener('click', openRank);
 $('btnRankBack').addEventListener('click', () => showPanel('pStart'));
 $('btnRankPlay').addEventListener('click', () => { audio(); newGame(); });
-/* ---------- daily tally: one anonymous count per finished run (stats-schema.sql). Numbers only: no device id, no nickname ---------- */
-// "first today" is this browser's own memory of the day, so the server can count devices without ever being told who they are
-let playSent = false;
-function playPing(){
-  if (playSent || !rankOn()) return;
-  playSent = true;
-  const day = kstDay(), top = S.peakN >= GOAL_N;
-  let st = null;
-  try { st = JSON.parse(store.get('playDay') || 'null'); } catch (e) {}
-  const same = !!st && st.d === day;
-  store.set('playDay', JSON.stringify({ d: day, top: (same && !!st.top) || top }));
-  rankRpc('macaron_play', { p_macarons: S.peakN, p_secs: Math.round(S.playTime * 10) / 10, p_first: !same, p_first_top: top && !(same && st.top) }).catch(() => {});
+/* ---------- fair play and the daily tally: every run is announced to the server when it starts and when it ends (guard-schema.sql) ---------- */
+// The server times the run with its own clock. A record is ranked or entered only after a run that took that long, so calling the
+// functions by hand with a made-up height does not work. The same two calls give the daily numbers (runs started, finished, played again).
+const RUN = { seq: 0, id: '', wait: null, timer: 0, again: false, done: null, ok: null, sentN: -1, wall: 0, frames: 0, landed: 0, taps: 0, misses: 0, fake: 0 };
+const NO_RUN = '00000000-0000-0000-0000-000000000000';
+function runAsk(seq){
+  if (seq !== RUN.seq || RUN.id) return Promise.resolve();
+  // n0: what was already stacked when this request left (0 unless the first try got lost on a bad connection)
+  return RUN.wait = rankRpc('macaron_begin', { p_device: deviceId(), p_src: RANK_SRC, p_again: RUN.again, p_n0: S.peakN })
+    .then(r => { if (seq !== RUN.seq) return; if (r && r.ok && r.run) RUN.id = r.run; else if (!r || (r.error !== 'limit' && r.error !== 'device')) throw 0; })
+    .catch(() => { if (seq === RUN.seq && !RUN.id){ clearTimeout(RUN.timer); RUN.timer = setTimeout(() => runAsk(seq), 3000); } });
 }
+function runBegin(again){
+  clearTimeout(RUN.timer);
+  Object.assign(RUN, { seq: RUN.seq + 1, id: '', wait: null, again: !!again, done: null, ok: null, sentN: -1, wall: 0, frames: 0, landed: 0, taps: 0, misses: 0, fake: 0 });
+  if (rankOn()) runAsk(RUN.seq);
+}
+// when the run reaches the top and when it is over. A later call only goes out if the stack grew (stacking on past the top)
+function runFinish(){
+  if (!rankOn()) return Promise.resolve(false);
+  const seq = RUN.seq, n = S.peakN;
+  if (RUN.done && RUN.sentN >= n && RUN.ok !== false) return RUN.done;
+  RUN.sentN = n; RUN.ok = null;
+  const body = { p_run: '', p_device: deviceId(), p_macarons: n, p_secs: Math.round(S.playTime * 10) / 10,
+    p_stats: { pf: S.perfects, ld: RUN.landed, mc: S.maxCombo, tp: RUN.taps, ms: RUN.misses, wall: Math.round(RUN.wall * 10) / 10, fr: RUN.frames,
+               ut: RUN.fake, wd: navigator.webdriver ? 1 : 0, w: innerWidth, h: innerHeight } };
+  const go = async tries => {
+    if (!RUN.id && RUN.wait) await RUN.wait;                       // the start may still be on its way
+    if (!RUN.id && seq === RUN.seq){ clearTimeout(RUN.timer); await runAsk(seq); clearTimeout(RUN.timer); }
+    if (seq !== RUN.seq || !RUN.id) return false;
+    body.p_run = RUN.id;
+    try { const r = await rankRpc('macaron_finish', body); return !!(r && r.ok); }
+    catch (e) { if (tries < 1) return false; await new Promise(res => setTimeout(res, 1500)); return go(tries - 1); }
+  };
+  const done = RUN.done = go(2).then(ok => { if (seq === RUN.seq && RUN.done === done) RUN.ok = ok; return ok; });
+  return done;
+}
+// the run number to send with a record: waits until the server has heard that the run ended
+async function runDone(){ const id0 = RUN.seq; await runFinish(); return id0 === RUN.seq && RUN.id ? RUN.id : NO_RUN; }
+// where visitors came from (the from= of the address: signage, gate, share) and which share button was pressed; one row per device and day
+function hit(kind){ if (rankOn()) rankRpc('macaron_hit', { p_device: deviceId(), p_kind: kind.toLowerCase() }).catch(() => {}); }
 /* ---------- prize draw entry: name and phone, kept by the macaron_enter function next to the ranking (raffle-schema.sql) ---------- */
 // Off when the server (RANK) is empty. publish_web.py fills RAFFLE_SET from raffle-config.json when that file exists.
 const RAFFLE_SET = {"minN": 100, "byRank": true, "until": "2026-12-25"};
@@ -2607,7 +2651,10 @@ const RAFFLE_ERR = {
   too_fast: '잠시 뒤에 다시 눌러 주세요.',
   limit: '이 기기에서는 오늘 더 응모할 수 없어요.',
   busy: '지금 응모하는 사람이 많아요. 잠시 뒤에 다시 눌러 주세요.',
-  device: '이 브라우저에서는 응모할 수 없어요.'
+  device: '이 브라우저에서는 응모할 수 없어요.',
+  run: '이번 판은 서버와 연결이 끊겨 기록을 확인하지 못했어요. 인터넷 연결을 확인하고 한 판 더 도전해 주세요.',
+  used: '이 기록으로는 이미 응모했어요. 한 판 더 쌓고 응모해 주세요.',
+  reload: '화면을 새로 고친 뒤 다시 도전해 주세요.'
 };
 function raffleClosed(){
   if (!RAFFLE.until) return false;
@@ -2661,7 +2708,9 @@ async function raffleBump(){
   if (!st || raffleBumped === key) return;
   raffleBumped = key;
   try {
-    const r = await rankRpc('macaron_enter_bump', { p_device: deviceId(), p_height: S.peak, p_macarons: S.peakN, p_secs: Math.round(S.playTime * 10) / 10 });
+    const body = { p_device: deviceId(), p_height: S.peak, p_macarons: S.peakN, p_secs: Math.round(S.playTime * 10) / 10 };
+    body.p_run = await runDone();
+    const r = await rankRpc('macaron_enter_bump', body);
     if (!r || !r.ok || runKey() !== key) return;
     st.h = S.peak; st.n = S.peakN; store.set('raffle', JSON.stringify(st));
     if (raffleBox && !raffleBox.hidden) raffleBox.querySelector('.raffle-line').textContent = `응모 기록이 ${fmt(st.h)}m로 올라갔어요.\n연락처 끝자리 ${st.tail}`;
@@ -2705,8 +2754,10 @@ async function raffleSubmit(){
       }
       rankShow(rk, nick, key);
     }
-    const r = await rankRpc('macaron_enter', { p_device: deviceId(), p_name: name, p_phone: phone, p_height: S.peak, p_macarons: S.peakN,
-      p_secs: Math.round(S.playTime * 10) / 10, p_consent: RAFFLE.consentVer, p_age14: true, p_source: RANK_SRC, p_fix: raffleFix });
+    const body = { p_device: deviceId(), p_name: name, p_phone: phone, p_height: S.peak, p_macarons: S.peakN,
+      p_secs: Math.round(S.playTime * 10) / 10, p_consent: RAFFLE.consentVer, p_age14: true, p_source: RANK_SRC, p_fix: raffleFix };
+    body.p_run = await runDone();
+    const r = await rankRpc('macaron_enter', body);
     if (!r || !r.ok){ setRaffleMsg(RAFFLE_ERR[r && r.error] || '응모하지 못했어요. 잠시 뒤에 다시 눌러 주세요.', true); return; }
     store.set('raffle', JSON.stringify({ h: S.peak, n: S.peakN, tail: phone.slice(-4) }));
     raffleFix = false; raffleBumped = runKey();
@@ -2741,7 +2792,7 @@ async function raffleNickOnly(){
   } finally { raffleBusy = false; }
 }
 $('btnNickOnly').addEventListener('click', raffleNickOnly);
-$('btnRaffleShare').addEventListener('click', () => shareCopy('btnRaffleShare', raffleFrom === 'pWin' ? winText() : resultText(), '복사했어요. 카카오톡에 붙여 넣으세요', $('rfShare')));
+$('btnRaffleShare').addEventListener('click', () => shareCopy('btnRaffleShare', raffleFrom === 'pWin' ? winText() : resultText(), '복사했어요. 카카오톡에 붙여 넣으세요', $('rfShare'), 'entry'));
 $('raffleForm').addEventListener('submit', e => { e.preventDefault(); raffleSubmit(); });
 $('rfPhone').addEventListener('input', e => { e.target.value = fmtPhone(e.target.value.replace(/\D/g, '').slice(0, 11)); });
 $('btnRaffleBack').addEventListener('click', () => showPanel(raffleFrom));
@@ -2885,6 +2936,7 @@ function boot(data){
     buildHero(); buildHeroEiffel();
     showPanel('pStart');
     startSplash();
+    hit('v:' + RANK_SRC);
   }
   requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 }
@@ -2899,7 +2951,8 @@ if (hot && typeof hot.snapshot === 'function'){
   } catch (e) {}
 }
 if (document.fonts && document.fonts.ready) Promise.all([document.fonts.ready, document.fonts.load('700 20px "Gala Futura Full"', 'A0').catch(() => {})]).then(() => { if (NEAR) buildNear(); fitIntro(); });   // 거리 간판 글자도 Futura 로 다시 그린다
-window.MacaronEiffel = { state: S, drop, newGame, hard: HARD, santa: SANTA, santaAt, gifts: () => GIFTS };
+// a handle for the tests, only when the page runs from this machine: on the public site the game cannot be driven from the console
+if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.protocol === 'file:') window.MacaronEiffel = { state: S, drop, newGame, hard: HARD, santa: SANTA, santaAt, gifts: () => GIFTS, run: RUN };
 hot && typeof hot.ready === 'function' ? hot.ready(boot) : boot((hot && hot.data) || {});
 })();
 </script>

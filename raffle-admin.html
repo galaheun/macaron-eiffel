@@ -37,6 +37,8 @@ label.f.wide{margin:12px 0}
 .result .tablewrap{margin:0 0 12px}
 .tag{display:inline-block;margin-right:5px;padding:1px 7px;border:1px solid var(--hair2);font-size:11.5px;color:var(--mute)}
 .tag.warn{border-color:var(--bad);color:var(--bad)}
+.mini{display:block;margin-top:2px;font-size:11.5px;color:var(--mute);white-space:nowrap}
+.subhead{margin:20px 0 8px;font-size:14px;font-weight:600}
 tr.spare td{color:var(--mute)}
 tfoot th{position:static;background:#f4efe7;font-size:13px;font-weight:600;color:var(--ink);border-bottom:0}
 .warnlist{margin:0 0 12px;padding:0;list-style:none;font-size:12.5px;line-height:1.6;color:var(--bad)}
@@ -98,8 +100,17 @@ tr.win td{background:var(--wash)}
       </table>
       <div class="empty" id="stEmpty" hidden>아직 집계된 날이 없어요.</div>
     </div>
-    <div class="row noprint" style="margin-top:10px"><button type="button" id="btnStatCsv">날짜별 현황 CSV 받기</button></div>
     <p class="note" id="stNote"></p>
+    <p class="subhead" id="sfHead" hidden>유입과 공유, 재도전</p>
+    <div class="tablewrap" id="sfWrap" hidden>
+      <table>
+        <thead><tr><th>날짜</th><th class="num">사이니지 QR 접속</th><th class="num">게이트 QR 접속</th><th class="num">공유 링크 접속</th><th class="num">그 밖 접속</th><th class="num">공유하기 누름</th><th class="num">시작한 판</th><th class="num">재도전 판</th><th class="num">재도전 기기</th></tr></thead>
+        <tbody id="sfRows"></tbody>
+        <tfoot id="sfFoot"></tfoot>
+      </table>
+    </div>
+    <p class="note" id="sfNote" hidden></p>
+    <div class="row noprint" style="margin-top:10px"><button type="button" id="btnStatCsv">날짜별 현황 CSV 받기</button></div>
   </section>
 
   <section class="card noprint" id="rankCard" hidden>
@@ -120,7 +131,7 @@ tr.win td{background:var(--wash)}
       <p id="rkSub"></p>
       <div class="tablewrap">
         <table>
-          <thead><tr><th class="num">순위</th><th>등수</th><th>경품</th><th>성함</th><th>연락처</th><th class="num">기록</th><th>기록한 시각</th><th>참고</th></tr></thead>
+          <thead><tr><th class="num">순위</th><th>등수</th><th>경품</th><th>성함</th><th>연락처</th><th class="num">기록</th><th>기록한 시각</th><th>참고</th><th>기록 확인</th></tr></thead>
           <tbody id="rkRows"></tbody>
         </table>
       </div>
@@ -179,7 +190,7 @@ tr.win td{background:var(--wash)}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="num">번호</th><th>응모 시각</th><th>성함</th><th>연락처</th><th class="num">기록</th><th class="num">마카롱</th><th>기록한 시각</th><th class="num">응모 횟수</th><th>들어온 길</th><th>당첨</th><th class="noprint"></th></tr></thead>
+        <thead><tr><th class="num">번호</th><th>응모 시각</th><th>성함</th><th>연락처</th><th class="num">기록</th><th class="num">마카롱</th><th>기록한 시각</th><th class="num">응모 횟수</th><th>들어온 길</th><th>기록 확인</th><th>당첨</th><th class="noprint"></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
       <div class="empty" id="empty" hidden>아직 응모한 분이 없어요.</div>
@@ -246,6 +257,31 @@ async function load(quiet){
   } catch (e) { say('loadMsg', failText(e), 'err'); return false; }
 }
 
+/* ---------- 기록 확인: 서버가 잰 판(guard-schema.sql)이 그 기록을 받쳐 주는지 ---------- */
+const FLAG = { legacy: '예전 화면', late: '연결 늦음', clock: '시간 안 맞음', quick: '너무 빠름', perfect: 'PERFECT 과다', auto: '자동 조작 의심', slow: '느리게 돌림', fast: '시간 모자람' };
+const FLAG_TIP = { legacy: '판 확인이 생기기 전 화면으로 올린 기록', late: '판을 시작한 뒤 서버에 늦게 닿아 앞부분 시간을 재지 못함', clock: '게임이 잰 시간이 서버가 잰 시간보다 김',
+  quick: '한 개에 1.05초 미만으로 사람이 하기 어려운 빠르기', perfect: 'PERFECT 가 93% 이상', auto: '자동 조작 브라우저이거나 스크립트가 만든 누름이 여러 번', slow: '게임 시계가 실제보다 느리게 흐름', fast: '서버가 잰 시간이 모자람' };
+const flagsOf = r => String(r.flags || '').split(',').filter(Boolean);
+const proofKnown = r => r.verified != null;                     // 판 확인이 없는 예전 서버는 이 값을 주지 않는다
+const proofBad = r => proofKnown(r) && (!r.verified || flagsOf(r).length > 0);
+const fmtDur = s => s == null ? '' : `${Math.floor(s / 60)}분 ${Math.round(s % 60)}초`;
+function proofText(r){
+  if (!proofKnown(r)) return '';
+  const f = flagsOf(r);
+  return f.length ? f.map(x => FLAG[x] || x).join(', ') : r.verified ? '확인됨' : '확인 안 됨';
+}
+function proofDetail(r){
+  if (!r.verified) return '';
+  return [r.run_secs != null ? `서버가 잰 시간 ${fmtDur(+r.run_secs)}` : '', r.run_perfect != null ? `PERFECT ${r.run_perfect}%` : '', r.dev_runs ? `이 기기의 ${r.dev_runs}번째 판` : ''].filter(Boolean).join(', ');
+}
+function proofHtml(r, detail){
+  if (!proofKnown(r)) return '';
+  const f = flagsOf(r), d = proofDetail(r);
+  const tags = f.length ? f.map(x => `<span class="tag warn" title="${esc(FLAG_TIP[x] || x)}">${esc(FLAG[x] || x)}</span>`).join('')
+    : r.verified ? `<span class="tag" title="${esc(d)}">확인됨</span>` : '<span class="tag warn" title="서버가 잰 판이 없는 기록">확인 안 됨</span>';
+  return tags + (detail && d ? `<span class="mini">${esc(d)}</span>` : '');
+}
+
 function visibleRows(){
   const q = $('q').value.trim().replace(/-/g, ''), v = $('view').value;
   const list = ROWS.filter(r => (v === 'all' || (v === 'win' && r.winner) || (v === 'top' && +r.height >= 330))
@@ -260,7 +296,7 @@ function render(){
   const list = visibleRows();
   $('rows').innerHTML = list.map(r => `<tr class="${r.winner ? 'win' : ''}">
     <td class="num">${r.id}</td><td title="${esc(fmtFull(r.at))}">${esc(fmtAt(r.at))}</td><td>${esc(showName(r.name))}</td><td>${esc(showPhone(r.phone))}</td>
-    <td class="num">${esc(fmtH(r.height))}</td><td class="num">${r.macarons}</td><td title="${esc(fmtFull(recAt(r)))}">${esc(fmtAt(recAt(r)))}</td><td class="num">${r.tries}</td><td>${esc(r.source || '')}</td>
+    <td class="num">${esc(fmtH(r.height))}</td><td class="num">${r.macarons}</td><td title="${esc(fmtFull(recAt(r)))}">${esc(fmtAt(recAt(r)))}</td><td class="num">${r.tries}</td><td>${esc(r.source || '')}</td><td>${proofHtml(r, false)}</td>
     <td>${r.winner ? `<span class="badge">당첨</span> ${esc(r.prize || '')}` : ''}</td>
     <td class="noprint">${r.winner ? `<button class="sm" data-act="unwin" data-id="${r.id}">당첨 취소</button> ` : ''}<button class="sm warn" data-act="del" data-id="${r.id}">지우기</button></td></tr>`).join('');
   $('empty').hidden = list.length > 0;
@@ -346,10 +382,21 @@ function renderStats(){
     <th class="num">${full ? num(sum.rank_players) : '-'}</th><th class="num">${num(sum.entries)}</th><th class="num"></th></tr>` : '';
   $('stEmpty').hidden = days.length > 0;
   $('stNote').textContent = (full
-    ? '게임한 기기, 끝난 판, 330m 달성 기기는 게임이 한 판 끝날 때마다 숫자만 올린 값이에요(누가 했는지는 저장하지 않아요). 합계의 기기 수는 날마다 센 값을 더한 것이라 여러 날 온 분은 날 수만큼 들어가요.'
+    ? '게임한 기기, 끝난 판, 330m 달성 기기는 판이 끝날 때마다 서버가 센 값이에요. 11월 26일부터는 판의 시작과 끝을 서버 시계로 재서 세고, 그 전 날짜는 게임이 보낸 숫자만 올린 값이에요. 합계의 기기 수는 날마다 센 값을 더한 것이라 여러 날 온 분은 날 수만큼 들어가요.'
       + (gap ? ' 판 수를 세기 전 날짜는 - 로 보여요.' : '')
     : '서버에 날짜별 집계 함수가 아직 없어서, 불러온 명단으로 응모만 셌어요.')
     + ' 랭킹 등록 기기는 그날 닉네임을 올린 기기, 새 응모는 그날 처음 성함과 연락처를 남긴 분이에요. 날짜는 한국 시간 기준이에요.';
+  // 유입과 공유, 재도전: 접속과 공유 버튼(macaron_hits), 서버가 잰 판(macaron_runs)을 세기 시작한 날부터
+  const flow = days.filter(d => d.tracked), vd = (d, k) => d.visits && d.visits[k] ? +d.visits[k].d || 0 : 0;
+  const cols = d => { const sh = d.shares || {}; return [vd(d, 'signage'), vd(d, 'gate'), vd(d, 'share'), vd(d, 'web') + vd(d, 'etc'), +sh.n || 0, +d.starts || 0, +d.retries || 0, +d.retry_players || 0]; };
+  const tot = [0, 0, 0, 0, 0, 0, 0, 0];
+  $('sfRows').innerHTML = flow.map(d => { const c = cols(d); c.forEach((v, i) => { tot[i] += v; });
+    return `<tr><td>${esc(dayLabel(d.day))}</td>${c.map((v, i) => `<td class="num"${i === 4 ? ` title="누른 기기 ${num((d.shares || {}).d || 0)}"` : ''}>${num(v)}</td>`).join('')}</tr>`; }).join('');
+  $('sfFoot').innerHTML = flow.length ? `<tr><th>합계</th>${tot.map(v => `<th class="num">${num(v)}</th>`).join('')}</tr>` : '';
+  ['sfHead', 'sfWrap', 'sfNote'].forEach(id => { $(id).hidden = !flow.length; });
+  $('sfNote').textContent = '접속은 그 주소로 들어온 기기 수예요. 사이니지와 게이트는 현장 화면의 QR, 공유 링크는 게임의 공유 버튼으로 보낸 주소, 그 밖은 주소를 직접 열었거나 표시가 없는 경우예요.'
+    + ' 공유하기 누름은 공유 버튼을 누른 횟수라 실제로 보냈는지는 알 수 없어요(칸에 마우스를 올리면 누른 기기 수). 시작한 판은 끝까지 가지 않은 판도 들어가요.'
+    + ' 재도전 판은 같은 기기가 그날 두 번째부터 시작한 판, 재도전 기기는 그날 두 판 넘게 한 기기예요. 같은 사람이 브라우저를 바꾸거나 저장 공간을 지우면 다른 기기로 세요.';
 }
 async function loadStats(){
   STATS = null; renderStats();
@@ -358,9 +405,15 @@ async function loadStats(){
 function statCsv(){
   const { days, full } = statDays(), v = (d, k) => d.counted && d[k] != null ? d[k] : '';
   let cum = 0;
-  const head = ['날짜', '게임한 기기', '끝난 판', '330m 달성 판', '330m 달성 기기', '랭킹 등록 기기', '랭킹 등록 횟수', '랭킹 최고(m)', '새 응모', '그중 330m 이상', '누적 응모'];
-  const lines = [head.join(',')].concat(days.map(d => { cum += +d.entries || 0; return [d.day, v(d, 'players'), v(d, 'plays'), v(d, 'top_plays'), v(d, 'top_players'),
-    full ? d.rank_players : '', full ? d.rank_rows : '', full && d.rank_best != null ? d.rank_best : '', d.entries || 0, d.entries_top || 0, cum].join(','); }));
+  const head = ['날짜', '게임한 기기', '끝난 판', '330m 달성 판', '330m 달성 기기', '랭킹 등록 기기', '랭킹 등록 횟수', '랭킹 최고(m)', '새 응모', '그중 330m 이상', '누적 응모',
+    '사이니지 QR 접속 기기', '사이니지 QR 접속 횟수', '게이트 QR 접속 기기', '게이트 QR 접속 횟수', '공유 링크 접속 기기', '공유 링크 접속 횟수', '그 밖 접속 기기', '그 밖 접속 횟수',
+    '공유하기 누른 횟수', '공유하기 누른 기기', '시작한 판', '판을 시작한 기기', '재도전 판', '재도전 기기', '다시 하기 버튼으로 시작한 판', '앞선 날에도 한 기기'];
+  const vis = (d, k, f) => d.visits && d.visits[k] ? +d.visits[k][f] || 0 : 0, tk = (d, x) => d.tracked ? x : '';
+  const lines = [head.join(',')].concat(days.map(d => { cum += +d.entries || 0; const sh = d.shares || {}; return [d.day, v(d, 'players'), v(d, 'plays'), v(d, 'top_plays'), v(d, 'top_players'),
+    full ? d.rank_players : '', full ? d.rank_rows : '', full && d.rank_best != null ? d.rank_best : '', d.entries || 0, d.entries_top || 0, cum,
+    tk(d, vis(d, 'signage', 'd')), tk(d, vis(d, 'signage', 'n')), tk(d, vis(d, 'gate', 'd')), tk(d, vis(d, 'gate', 'n')), tk(d, vis(d, 'share', 'd')), tk(d, vis(d, 'share', 'n')),
+    tk(d, vis(d, 'web', 'd') + vis(d, 'etc', 'd')), tk(d, vis(d, 'web', 'n') + vis(d, 'etc', 'n')), tk(d, +sh.n || 0), tk(d, +sh.d || 0),
+    tk(d, +d.starts || 0), tk(d, +d.start_players || 0), tk(d, +d.retries || 0), tk(d, +d.retry_players || 0), tk(d, +d.again || 0), tk(d, +d.back_players || 0)].join(','); }));
   const t = new Date(), a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = `macaron-daily-${t.getFullYear()}${pad(t.getMonth() + 1)}${pad(t.getDate())}-${pad(t.getHours())}${pad(t.getMinutes())}.csv`;
@@ -424,12 +477,14 @@ function showRank(){
   $('rkSub').textContent = `대상: ${R.label} ${R.size}명` + (R.out ? ` (기록은 되지만 기간 밖이라 뺀 분 ${R.out}명)` : '') + `. 순위 매긴 시각 ${fmtFull(R.at)}.`;
   const line = ({ p, r }) => { const t = R.tiers[p.ti]; return `<tr class="${t ? '' : 'spare'}"><td class="num">${p.no}</td><td>${t ? esc(t.name) : '예비'}</td><td>${t ? esc(t.prize) : ''}</td>
     <td>${esc(showName(r.name))}</td><td>${esc(showPhone(r.phone))}</td><td class="num">${esc(fmtH(r.height))}</td><td title="${esc(fmtFull(recAt(r)))}">${esc(fmtSec(recAt(r)))}</td>
-    <td>${p.tie ? '<span class="tag">동점</span>' : ''}${p.tie && loose(r) ? '<span class="tag warn">시각 확인</span>' : ''}</td></tr>`; };
+    <td>${p.tie ? '<span class="tag">동점</span>' : ''}${p.tie && loose(r) ? '<span class="tag warn">시각 확인</span>' : ''}</td><td>${proofHtml(r, true)}</td></tr>`; };
   $('rkRows').innerHTML = picks.concat(spares).map(line).join('');
   const warn = [], ids = new Set(R.picks.map(p => p.id));
   if (picks.length < R.seats) warn.push(`대상이 ${R.size}명이라 ${R.seats - picks.length}자리가 비어요.`);
   if (R.edge) warn.push(`당첨 끝자리(${R.picks.length}위)와 그다음 분의 기록이 같아서, 기록한 시각이 빠른 분이 당첨이에요.`);
   if (picks.concat(spares).some(x => x.p.tie && loose(x.r))) warn.push('"시각 확인" 표시가 있는 분은 같은 번호로 다시 응모한 적이 있어요. 서버에 기록 세운 시각이 따로 없어 마지막 응모 시각으로 봤으니, 동점인 분과 순서가 맞는지 확인해 주세요.');
+  const odd = picks.filter(x => proofBad(x.r)).length;
+  if (odd) warn.push(`당첨 ${picks.length}명 가운데 ${odd}명은 "기록 확인" 칸에 붉은 표시가 있어요. 서버가 그 기록을 다 확인하지 못했거나 이상한 점이 있다는 뜻이에요. 표시에 마우스를 올리면 내용이 보여요. 당첨에서 뺄지는 직접 정해 주세요(명단에서 지우거나, 저장한 뒤 "당첨 취소").`);
   const stale = ROWS.filter(r => r.winner && !ids.has(r.id));
   if (stale.length) warn.push(`지금 당첨으로 표시된 분 가운데 이번 순위에 없는 분이 ${stale.length}명 있어요. 저장해도 그 표시는 남으니 아래 명단에서 "당첨 취소"로 지워 주세요.`);
   $('rkWarn').innerHTML = warn.map(w => `<li>${esc(w)}</li>`).join('');
@@ -462,9 +517,9 @@ async function saveRank(){
 /* ---------- 엑셀용 파일 ---------- */
 function csv(){
   const cell = v => { v = String(v == null ? '' : v); return /^[=+\-@\t\r]/.test(v) ? `"'${v.replace(/"/g, '""')}"` : /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
-  const head = ['번호', '응모 시각', '성함', '연락처', '기록(m)', '마카롱 수', '응모 횟수', '들어온 길', '동의 안내문 판', '당첨', '경품', '당첨 표시 시각', '기록한 시각'];
+  const head = ['번호', '응모 시각', '성함', '연락처', '기록(m)', '마카롱 수', '응모 횟수', '들어온 길', '동의 안내문 판', '당첨', '경품', '당첨 표시 시각', '기록한 시각', '기록 확인', '서버가 잰 시간(초)', 'PERFECT(%)', '그 기기의 몇 번째 판'];
   const lines = [head.join(',')].concat(visibleRows().map(r => [r.id, fmtFull(r.at), r.name, fmtPhone(r.phone), r.height, r.macarons, r.tries, r.source || '', r.consent || '',
-    r.winner ? '당첨' : '', r.prize || '', r.won_at ? fmtFull(r.won_at) : '', fmtFull(recAt(r))].map(cell).join(',')));
+    r.winner ? '당첨' : '', r.prize || '', r.won_at ? fmtFull(r.won_at) : '', fmtFull(recAt(r)), proofText(r), r.run_secs == null ? '' : r.run_secs, r.run_perfect == null ? '' : r.run_perfect, r.dev_runs || ''].map(cell).join(',')));
   const d = new Date(), name = `macaron-raffle-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.csv`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
