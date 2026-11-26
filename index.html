@@ -9,7 +9,7 @@
 <meta property="og:title" content="마카롱 타워 챌린지">
 <meta property="og:description" content="파크 하얏트 부산과 피에르 에르메의 크리스마스 윈터 라운지 이벤트">
 <meta property="og:url" content="https://macaron-eiffel.vercel.app/">
-<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611260946">
+<meta property="og:image" content="https://macaron-eiffel.vercel.app/og.png?v=202611260951">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -2629,7 +2629,9 @@ function runFinish(){
 // the run number to send with a record: waits until the server has heard that the run ended
 async function runDone(){ const id0 = RUN.seq; await runFinish(); return id0 === RUN.seq && RUN.id ? RUN.id : NO_RUN; }
 // where visitors came from (the from= of the address: signage, gate, share) and which share button was pressed; one row per device and day
-function hit(kind){ if (rankOn()) rankRpc('macaron_hit', { p_device: deviceId(), p_kind: kind.toLowerCase() }).catch(() => {}); }
+// Automated browsers are left out: the host renders each new deployment in a few headless browsers for its preview pictures, and crawlers open the page too
+const AUTO_UA = !!navigator.webdriver || /vercel-|googlebot|bingbot|yeti\/|twitterbot|facebookexternalhit|slackbot|crawl|spider|lighthouse|pagespeed/i.test(navigator.userAgent);
+function hit(kind){ if (rankOn() && !AUTO_UA) rankRpc('macaron_hit', { p_device: deviceId(), p_kind: kind.toLowerCase() }).catch(() => {}); }
 /* ---------- prize draw entry: name and phone, kept by the macaron_enter function next to the ranking (raffle-schema.sql) ---------- */
 // Off when the server (RANK) is empty. publish_web.py fills RAFFLE_SET from raffle-config.json when that file exists.
 const RAFFLE_SET = {"minN": 100, "byRank": true, "until": "2026-12-25"};
